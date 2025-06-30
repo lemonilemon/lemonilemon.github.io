@@ -1,8 +1,8 @@
 baseurl = "https://lemonilemon.github.io/"
 title = "johndoe"
 theme = "hugo-coder"
-languagecode = "en"
-defaultcontentlanguage = "en"
+languagecode = "zh-TW"
+defaultcontentlanguage = "zh"
 
 [pagination]
 pagerSize = 20
@@ -48,17 +48,7 @@ style = "github-dark"
   name = "Github"
   icon = "fa-brands fa-github fa-2x"
   weight = 1
-  url = "https://github.com/johndoe/"
-[[params.social]]
-  name = "Gitlab"
-  icon = "fa-brands fa-gitlab fa-2x"
-  weight = 2
-  url = "https://gitlab.com/johndoe/"
-[[params.social]]
-  name = "Twitter"
-  icon = "fa-brands fa-x-twitter fa-2x"
-  weight = 3
-  url = "https://twitter.com/johndoe/"
+  url = "https://github.com/lemonilemon/"
 
 # Menu links
 [[menu.main]]

@@ -1,11 +1,24 @@
 baseurl = "https://lemonilemon.github.io/"
 title = "lemonilemon's Blog"
 theme = "hugo-coder"
-languagecode = "zh-TW"
-defaultcontentlanguage = "zh"
+# languageCode = "zh-TW"
+enableEmoji = true
+defaultContentLanguage = "en"
+languageCode = "en-US"
+# [languages]
+#     [languages.zh]
+#     languageName =  "Chinese"
+#     languageCode = "zh-TW"
+#         [languages.zh.params]
+#             reading_speed = 500
+#     [languages.en]
+#         languageCode = "en-US"
+#         languageName = "English"
+#         [languages.en.params]
+#             reading_speed = 212
 
 [pagination]
-pagerSize = 20
+pagerSize = 6
 
 [services]
 [services.disqus]
@@ -16,22 +29,16 @@ style = "github-dark"
 
 [params]
   author = "lemonilemon"
-  info = "Tech-Tinkering Code Alchemist"
-  description = "lemonilemon's personal website"
   keywords = "blog,developer,personal"
-  # avatarurl = "images/avatar.jpg"
+  info = "Tech-Tinkering Code Alchemist"
+  dateFormat = "January 2, 2006"
+  description = "lemonilemon's personal website"
   gravatar = "imlemonilemon@gmail.com"
-
-  faviconSVG = "/img/favicon.svg"
-  favicon_32 = "/img/favicon-32x32.png"
-  favicon_16 = "/img/favicon-16x16.png"
-
-  since = 2025
-
-  enableTwemoji = true
-
   colorScheme = "auto"
+  since = 2025
+  enableTwemoji = true
   hidecolorschemetoggle = false
+  maxSeeAlsoItems = 5
 
 [taxonomies]
   category = "categories"

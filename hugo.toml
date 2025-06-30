@@ -1,5 +1,5 @@
 baseurl = "https://lemonilemon.github.io/"
-title = "johndoe"
+title = "lemonilemon's Blog"
 theme = "hugo-coder"
 languagecode = "zh-TW"
 defaultcontentlanguage = "zh"

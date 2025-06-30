@@ -48,11 +48,25 @@ style = "github-dark"
 
 # Social links
 [[params.social]]
-  name = "Github"
+  name = "GitHub"
   icon = "fa-brands fa-github fa-2x"
   weight = 1
   url = "https://github.com/lemonilemon/"
-
+[[params.social]]
+  name = "GitLab"
+  icon = "fa-brands fa-gitlab fa-2x"
+  weight = 2
+  url = "https://gitlab.com/lemonilemon/"
+[[params.social]]
+  name = "LinkedIn"
+  icon = "fa-brands fa-linkedin fa-2x"
+  weight = 3
+  url = "https://www.linkedin.com/in/meng-heng-tsai-8b1965330/"
+[[params.social]]
+  name = "Email"
+  icon = "fa-brands fa-envelope fa-2x"
+  weight = 4
+  url = "mailto:imlemonilemon@gmail.com"
 # Menu links
 [[menu.main]]
   name = "Blog"

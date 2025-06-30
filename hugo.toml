@@ -9,33 +9,29 @@ pagerSize = 20
 
 [services]
 [services.disqus]
-shortname = "yourdiscussshortname"
+shortname = "lemonilemon"
 
 [markup.highlight]
 style = "github-dark"
 
 [params]
-  author = "John Doe"
-  info = "Full Stack DevOps and Magician"
-  description = "John Doe's personal website"
+  author = "lemonilemon"
+  info = "Tech-Tinkering Code Alchemist"
+  description = "lemonilemon's personal website"
   keywords = "blog,developer,personal"
-  avatarurl = "images/avatar.jpg"
-  #gravatar = "john.doe@example.com"
+  # avatarurl = "images/avatar.jpg"
+  gravatar = "imlemonilemon@gmail.com"
 
   faviconSVG = "/img/favicon.svg"
   favicon_32 = "/img/favicon-32x32.png"
   favicon_16 = "/img/favicon-16x16.png"
 
-  since = 2019
+  since = 2025
 
   enableTwemoji = true
 
   colorScheme = "auto"
   hidecolorschemetoggle = false
-
-  # customCSS = ["css/custom.css"]
-  # customSCSS = ["scss/custom.scss"]
-  # customJS = ["js/custom.js"]
 
 [taxonomies]
   category = "categories"

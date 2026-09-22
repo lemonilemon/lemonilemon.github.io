@@ -23,10 +23,10 @@ What the visitor sees on the home page, and nothing else:
   frame. Small points move slowly along the orbits (CSS animation; periods
   20 s, 50 s, 100 s, 180 s, inner fastest; frozen under
   `prefers-reduced-motion`).
-- The lemon avatar at the centre of the orbits, 120px, cropped to the slice.
-  It is the only colour on the page.
-- One sentence: who the author is and what the site holds. A link to the
-  latest post.
+- A plain ink point at the centre of the system.
+- The intro block: the lemon avatar, 64px, cropped to the slice; one sentence
+  on who the author is and what the site holds; a link to the latest post.
+  The avatar is the only colour on the page.
 - Header navigation: Writing, About, theme toggle. Footer: copyright, RSS,
   source.
 
@@ -72,9 +72,9 @@ hover. No colour change.
 
 - Home: viewport-height, no scroll on desktop. Text block left, max width
   520px, vertically centred. Orbit SVG absolutely positioned, centre at
-  (1040, 420) of a 1280×800 frame, radii 110/210/330/480, avatar 120px at the
-  centre. On phone the centre moves to the top right (avatar 80px) and the text
-  sits in the lower half. The page has a visually hidden `<h1>` with the site
+  (1040, 420) of a 1280×800 frame, radii 110/210/330/480. On phone the centre
+  moves to the top right and the intro block sits in the lower half (avatar
+  56px). The page has a visually hidden `<h1>` with the site
   name; the visible text is a paragraph.
 - Header 80px (phone 64px): orbit mark + wordmark left; nav right in mono
   uppercase; 44px hit targets.
@@ -133,7 +133,7 @@ About page: `src/pages/about.md` with a layout.
 | Feature       | Plan                                                   |
 |---------------|--------------------------------------------------------|
 | Theme toggle  | kept, icon only                                        |
-| Avatar        | the lemon, at the orbit centre on home. Source: a cropped copy of the Gravatar committed to `src/assets` (the Gravatar itself has handwriting across the top), or the Gravatar URL with a CSS zoom crop |
+| Avatar        | the lemon, beside the intro on home. Source: a cropped copy of the Gravatar committed to `src/assets` (the Gravatar itself has handwriting across the top), or the Gravatar URL with a CSS zoom crop |
 | Social links  | text links on About only                               |
 | Comments      | giscus (GitHub Discussions), replaces Disqus. To confirm |
 | Previous/next | kept; related posts dropped                            |

@@ -8,31 +8,40 @@ home in light and dark, phone, writing index, post, about).
 
 ## Concept
 
-One idea carries the site: **the world moves, and it can be understood.**
+One idea carries the site. It comes from the opening of 地。-關於地球的運動-,
+Sakanaction's 怪獣:
 
-The inspiration is 地。-關於地球的運動-, taken as an attitude rather than as
-imagery: curiosity about how things work is worth the effort, and the moment
-something makes sense is its own reward. The site does not borrow the anime's
-elements, and it does not state the idea in words anywhere. The visual carries
-it.
+> この世界は好都合に未完成　だから知りたいんだ
+
+The world is conveniently unfinished, and that is exactly why one wants to
+know. Incompleteness is not a defect. It is the invitation. The site never
+states this in words. The visual carries it.
 
 What the visitor sees on the home page, and nothing else:
 
-- A large, abstract orbital system drawn in hairlines, centred past the right
-  edge so the outer orbits leave the viewport. The system is bigger than the
-  frame. Small points move slowly along the orbits (CSS animation; periods
-  20 s, 50 s, 100 s, 180 s, inner fastest; frozen under
-  `prefers-reduced-motion`).
-- A plain ink point at the centre of the system.
+- A diagram of concentric rings, each left unfinished. The innermost is nearly
+  closed; every ring further out is drawn less, until the outermost is half an
+  arc. All the openings face the same way, off the right edge of the frame: the
+  unfinished part of the world is beyond what the page shows. A small point
+  marks the centre, like a compass pivot.
+- When the page loads the rings draw themselves once, inner first, over about
+  two seconds, and stop before closing. Under `prefers-reduced-motion` they are
+  simply there. Nothing moves after that.
 - The intro block: the lemon avatar, 64px, cropped to the slice; one sentence
   on who the author is and what the site holds; a link to the latest post.
   The avatar is the only colour on the page.
 - Header navigation: Writing, About, theme toggle. Footer: copyright, RSS,
   source.
 
+The header mark and favicon are the same unfinished circle at 14px.
+
+Ring geometry (1280×800 frame): centre (1040, 420), radii 110 / 210 / 330 /
+480, drawn fractions 0.92 / 0.80 / 0.64 / 0.50 of a full circle, openings
+centred on the right. On phone: centre (310, 210), radii 60 / 115 / 180 / 255.
+
 The tone is focus, clarity, elegance. Every other page is a single 680px
 reading column with the same header and footer. No sidebars, no cards, no
-tags in lists, no icons beyond the orbit mark and the theme toggle.
+tags in lists, no icons beyond the ring mark and the theme toggle.
 
 ## Typography
 
@@ -58,8 +67,8 @@ preview.
 | `--surface`    | `#f2f0ea` | `#161920` | code blocks                      |
 | `--ink`        | `#17181a` | `#e8e6df` | text, moving points              |
 | `--muted`      | `#6b6b66` | `#9a9a93` | secondary text, labels           |
-| `--rule`       | `#e1dfd8` | `#262a31` | hairlines, outermost orbit       |
-| `--rule-strong`| `#c9c6bd` | `#454b55` | innermost orbit, link underline  |
+| `--rule`       | `#e1dfd8` | `#262a31` | hairlines, outermost ring        |
+| `--rule-strong`| `#c9c6bd` | `#454b55` | innermost ring, link underline   |
 
 Light is the default under `prefers-color-scheme: light`; dark reads as night
 sky. A header toggle overrides and persists in `localStorage`. Code uses Shiki
@@ -70,11 +79,10 @@ hover. No colour change.
 
 ## Layout
 
-- Home: viewport-height, no scroll on desktop. Text block left, max width
-  520px, vertically centred. Orbit SVG absolutely positioned, centre at
-  (1040, 420) of a 1280×800 frame, radii 110/210/330/480. On phone the centre
-  moves to the top right and the intro block sits in the lower half (avatar
-  56px). The page has a visually hidden `<h1>` with the site
+- Home: viewport-height, no scroll on desktop. Intro block left, max width
+  520px, vertically centred. Ring SVG absolutely positioned behind it. On phone
+  the centre moves to the top right and the intro block sits in the lower half
+  (avatar 56px). The page has a visually hidden `<h1>` with the site
   name; the visible text is a paragraph.
 - Header 80px (phone 64px): orbit mark + wordmark left; nav right in mono
   uppercase; 44px hit targets.

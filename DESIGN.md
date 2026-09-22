@@ -13,8 +13,8 @@ One idea carries the site: **the world moves, and it can be understood.**
 The inspiration is 地。-關於地球的運動-, taken as an attitude rather than as
 imagery: curiosity about how things work is worth the effort, and the moment
 something makes sense is its own reward. The site does not borrow the anime's
-elements. It borrows the stance and applies it to whatever the author is
-learning, which is currently computer science.
+elements, and it does not state the idea in words anywhere. The visual carries
+it.
 
 What the visitor sees on the home page, and nothing else:
 
@@ -22,9 +22,11 @@ What the visitor sees on the home page, and nothing else:
   edge so the outer orbits leave the viewport. The system is bigger than the
   frame. Small points move slowly along the orbits (CSS animation; periods
   20 s, 50 s, 100 s, 180 s, inner fastest; frozen under
-  `prefers-reduced-motion`). The centre point is the one accent colour.
-- The statement: **The world moves.** / *I want to understand how.*
-- One sentence of context and a link to the latest post.
+  `prefers-reduced-motion`).
+- The lemon avatar at the centre of the orbits, 120px, cropped to the slice.
+  It is the only colour on the page.
+- One sentence: who the author is and what the site holds. A link to the
+  latest post.
 - Header navigation: Writing, About, theme toggle. Footer: copyright, RSS,
   source.
 
@@ -58,7 +60,6 @@ preview.
 | `--muted`      | `#6b6b66` | `#9a9a93` | secondary text, labels           |
 | `--rule`       | `#e1dfd8` | `#262a31` | hairlines, outermost orbit       |
 | `--rule-strong`| `#c9c6bd` | `#454b55` | innermost orbit, link underline  |
-| `--accent`     | `#b8901f` | `#e2c25f` | the centre point only            |
 
 Light is the default under `prefers-color-scheme: light`; dark reads as night
 sky. A header toggle overrides and persists in `localStorage`. Code uses Shiki
@@ -69,10 +70,12 @@ hover. No colour change.
 
 ## Layout
 
-- Home: viewport-height, no scroll on desktop. Statement block left, max width
-  540px, vertically centred. Orbit SVG absolutely positioned, centre at
-  (1040, 420) of a 1280×800 frame, radii 110/210/330/480. On phone the centre
-  moves to the top right and the statement sits in the lower half.
+- Home: viewport-height, no scroll on desktop. Text block left, max width
+  520px, vertically centred. Orbit SVG absolutely positioned, centre at
+  (1040, 420) of a 1280×800 frame, radii 110/210/330/480, avatar 120px at the
+  centre. On phone the centre moves to the top right (avatar 80px) and the text
+  sits in the lower half. The page has a visually hidden `<h1>` with the site
+  name; the visible text is a paragraph.
 - Header 80px (phone 64px): orbit mark + wordmark left; nav right in mono
   uppercase; 44px hit targets.
 - Reading pages (Writing, post, About): 680px column, 88px top padding.
@@ -80,15 +83,13 @@ hover. No colour change.
   title left, date right, hairline between rows.
 - Post: back link, title, one meta line (date, reading time, language, tags),
   prose, previous/next, comments.
-- About: the concept in prose (draft copy is in the mockup), current focus,
-  how the site is built, and the "Elsewhere" links.
+- About: facts only. Current focus, languages, how the site is built, and the
+  "Elsewhere" links. The concept is not explained.
 
 ## Copy
 
-Home statement: "The world moves." / "I want to understand how."
-Home context: "I'm lemonilemon, a computer science student at National Taiwan
-University. This is where I keep what I learn about how things work: systems,
-languages, mathematics, and whatever moves me next."
+Home: "I'm lemonilemon, a computer science student at National Taiwan
+University. I write here about what I'm learning, in English or 中文."
 About: drafted in the mockup; to be rewritten in the author's voice.
 
 ## Pages and URLs
@@ -132,7 +133,7 @@ About page: `src/pages/about.md` with a layout.
 | Feature       | Plan                                                   |
 |---------------|--------------------------------------------------------|
 | Theme toggle  | kept, icon only                                        |
-| Avatar        | none on the site (Gravatar dropped)                    |
+| Avatar        | the lemon, at the orbit centre on home. Source: a cropped copy of the Gravatar committed to `src/assets` (the Gravatar itself has handwriting across the top), or the Gravatar URL with a CSS zoom crop |
 | Social links  | text links on About only                               |
 | Comments      | giscus (GitHub Discussions), replaces Disqus. To confirm |
 | Previous/next | kept; related posts dropped                            |

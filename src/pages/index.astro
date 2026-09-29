@@ -9,7 +9,7 @@ const person = {
   '@context': 'https://schema.org',
   '@type': 'Person',
   name: SITE.author,
-  alternateName: SITE.name,
+  alternateName: [SITE.realName, SITE.name],
   url: new URL('/', Astro.site).href,
   sameAs: [LINKS.github, LINKS.linkedin],
 };

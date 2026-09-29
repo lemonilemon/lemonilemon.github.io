@@ -1,6 +1,8 @@
 export const SITE = {
   name: 'lemonilemon',
   author: 'Jasper Tsai',
+  // The name on official records, which LinkedIn also uses.
+  realName: 'Meng-Heng Tsai',
   description: "lemonilemon's personal website: notes on what I'm learning and working on.",
   since: 2025,
   source: 'https://github.com/lemonilemon/lemonilemon.github.io',

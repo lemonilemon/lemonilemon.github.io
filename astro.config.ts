@@ -8,10 +8,8 @@ export default defineConfig({
   // local builds, which are never deployed, fall back to the dev server.
   site: process.env.SITE_URL || 'http://localhost:4321',
   trailingSlash: 'ignore',
-  integrations: [sitemap()],
-  redirects: {
-    '/about': '/cv',
-  },
+  // The CV is noindex, so it stays out of the sitemap too.
+  integrations: [sitemap({ filter: (page) => !new URL(page).pathname.startsWith('/cv') })],
   markdown: {
     processor: satteri({ features: { math: true }, hastPlugins: [katexPlugin] }),
     shikiConfig: {

@@ -2,7 +2,10 @@
 import Mark from './Mark.astro';
 
 const path = Astro.url.pathname.replace(/\/$/, '');
-const nav = [{ href: '/posts/', label: 'Writing', current: path.startsWith('/posts') }];
+const nav = [
+  { href: '/posts/', label: 'Writing', current: path.startsWith('/posts') },
+  { href: '/about/', label: 'About', current: path === '/about' },
+];
 ---
 
 <header class="header">

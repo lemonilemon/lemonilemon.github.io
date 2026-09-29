@@ -1,0 +1,36 @@
+---
+import Base from '../layouts/Base.astro';
+import { LINKS } from '../consts';
+---
+
+<Base title="About" description="Who lemonilemon is, and what this site is for." stars={271}>
+  <div class="column">
+    <h1 class="page-title">About</h1>
+    <div class="body">
+      <p>I'm a CS &amp; Finance student in Taiwan.</p>
+      <p>This site is where I write about what I'm learning and what I'm working on.</p>
+      <p>
+        Elsewhere: <a class="u" href={LINKS.github}>GitHub</a>, <a class="u" href={LINKS.linkedin}>LinkedIn</a>, or
+        <a class="u" href={LINKS.email}>email</a>.
+      </p>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .column {
+    gap: 36px;
+  }
+  .body {
+    padding-top: 28px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    font-size: 19px;
+    line-height: 1.75;
+  }
+  p {
+    margin: 0;
+  }
+</style>

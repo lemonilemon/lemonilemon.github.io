@@ -20,9 +20,11 @@ interface Props {
   // Seed for the night-sky gutters; omit for pages that draw their own sky.
   stars?: number;
   class?: string;
+  // Keep the page out of search results; crawlers may still visit it.
+  noindex?: boolean;
 }
 
-const { title, description = SITE.description, lang = 'en', stars, class: className } = Astro.props;
+const { title, description = SITE.description, lang = 'en', stars, class: className, noindex = false } = Astro.props;
 const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
@@ -35,6 +37,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="alternate" type="application/rss+xml" title={SITE.name} href="/rss.xml" />
     <link rel="sitemap" href="/sitemap-index.xml" />

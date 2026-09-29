@@ -1,13 +1,13 @@
 ---
 import Base from '../layouts/Base.astro';
-import { LINKS } from '../consts';
+import { LINKS, SITE } from '../consts';
 ---
 
-<Base title="About" description="Who lemonilemon is, and what this site is for." stars={271}>
+<Base title="About" description={`Who ${SITE.author} (${SITE.name}) is, and what this site is for.`} stars={271}>
   <div class="column">
     <h1 class="page-title">About</h1>
     <div class="body">
-      <p>I'm a CS &amp; Finance student in Taiwan.</p>
+      <p>I'm {SITE.author}, a CS &amp; Finance student in Taiwan. Online I go by {SITE.name}.</p>
       <p>This site is where I write about what I'm learning and what I'm working on.</p>
       <p>
         Elsewhere: <a class="u" href={LINKS.github}>GitHub</a>, <a class="u" href={LINKS.linkedin}>LinkedIn</a>, or

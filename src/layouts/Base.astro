@@ -25,7 +25,7 @@ interface Props {
 }
 
 const { title, description = SITE.description, lang = 'en', stars, class: className, noindex = false } = Astro.props;
-const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
+const pageTitle = title ? `${title} · ${SITE.name}` : `${SITE.author} (${SITE.name})`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
@@ -36,6 +36,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
+    <meta name="author" content={SITE.author} />
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

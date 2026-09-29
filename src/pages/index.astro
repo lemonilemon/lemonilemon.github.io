@@ -2,17 +2,28 @@
 import Base from '../layouts/Base.astro';
 import Day from '../components/home/Day.astro';
 import Night from '../components/home/Night.astro';
-import { LINKS } from '../consts';
+import { LINKS, SITE } from '../consts';
+
+// Tells search engines that the name, the handle and these profiles are one person.
+const person = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: SITE.author,
+  alternateName: SITE.name,
+  url: new URL('/', Astro.site).href,
+  sameAs: [LINKS.github, LINKS.linkedin],
+};
 ---
 
 <Base class="home">
-  <h1 class="visually-hidden">lemonilemon</h1>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(person)} />
+  <h1 class="visually-hidden">{SITE.author}</h1>
   <Night />
   <Day />
   <div class="intro">
     <div class="words">
       <p class="hello">Hello, world!</p>
-      <p class="about">I'm a CS &amp; Finance student in Taiwan. I write here about what I'm learning and what I'm working on.</p>
+      <p class="about">I'm Jasper, a CS &amp; Finance student in Taiwan. I write here about what I'm learning and what I'm working on.</p>
     </div>
     <div class="links">
       <a class="u" href="/cv/">CV</a>

@@ -1,0 +1,71 @@
+---
+import Base from '../layouts/Base.astro';
+import Mark from '../components/Mark.astro';
+import { SITE } from '../consts';
+---
+
+<Base title="Colophon" stars={1117}>
+  <div class="column">
+    <h1 class="page-title">Colophon</h1>
+    <dl>
+      <dt>Night</dt>
+      <dd>A small tribute to <span class="work" lang="ja">《チ。―地球の運動について―》</span>: the same planets, seen from somewhere else.</dd>
+      <dt>Day</dt>
+      <dd>The laptop remembers Space Travel, the 1969 game that led to Unix.</dd>
+      <dt>Mark</dt>
+      <dd class="mark"><Mark />An orbit: something going round, and the trail it leaves.</dd>
+      <dt>Built</dt>
+      <dd>With <a class="u" href="https://astro.build/">Astro</a>. The <a class="u" href={SITE.source}>source</a> is public, and not everything in it is visible.</dd>
+    </dl>
+  </div>
+</Base>
+
+<style>
+  .column {
+    gap: 36px;
+  }
+  dl {
+    margin: 0;
+    padding-top: 28px;
+    border-top: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    column-gap: 24px;
+    row-gap: 16px;
+    font-size: 18px;
+    line-height: 1.65;
+  }
+  dt {
+    padding-top: 4px;
+    font-family: var(--font-label);
+    font-size: 12.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  dd {
+    margin: 0;
+  }
+  .work {
+    white-space: nowrap;
+  }
+  .mark {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  /* Centred on the first line (18px × 1.65). */
+  .mark :global(svg) {
+    flex-shrink: 0;
+    margin-top: 8px;
+  }
+  @media (max-width: 720px) {
+    dl {
+      grid-template-columns: 1fr;
+      row-gap: 4px;
+    }
+    dd + dt {
+      margin-top: 16px;
+    }
+  }
+</style>

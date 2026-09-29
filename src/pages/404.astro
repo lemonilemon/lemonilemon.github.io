@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Not found" stars={404}>
+  <div class="column">
+    <h1 class="page-title">Not found</h1>
+    <p>There is nothing at this address. Try <a class="u" href="/posts/">Writing</a> or the <a class="u" href="/">home page</a>.</p>
+  </div>
+</Base>
+
+<style>
+  .column {
+    gap: 18px;
+  }
+  p {
+    margin: 0;
+    font-size: 19px;
+    line-height: 1.75;
+    color: var(--body);
+  }
+</style>

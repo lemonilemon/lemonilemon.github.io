@@ -1,0 +1,158 @@
+:root {
+  --bg: #fbfaf7;
+  --surface: #f2f0ea;
+  --ink: #17181a;
+  --body: #45464a;
+  --muted: #6b6b66;
+  --faint: #a8a59c;
+  --rule: #e1dfd8;
+  --rule-strong: #c9c6bd;
+  --selection: #e9e3cf;
+  --screen: #f3f1ea;
+  --key-down: #dcd8cc;
+
+  --font-text: 'Spectral', 'Noto Serif TC Variable', 'PingFang TC', 'Microsoft JhengHei', Georgia, serif;
+  --font-label: 'IBM Plex Mono', 'Noto Serif TC Variable', ui-monospace, monospace;
+
+  --gutter: 64px;
+  --header-h: 80px;
+  --measure: 680px;
+
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --bg: #0e1014;
+  --surface: #171a20;
+  --ink: #e8e6df;
+  --body: #c4c2bb;
+  --muted: #9a9a93;
+  --faint: #5d626a;
+  --rule: #262a31;
+  --rule-strong: #454b55;
+  --selection: #3a3524;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #0e1014;
+    --surface: #171a20;
+    --ink: #e8e6df;
+    --body: #c4c2bb;
+    --muted: #9a9a93;
+    --faint: #5d626a;
+    --rule: #262a31;
+    --rule-strong: #454b55;
+    --selection: #3a3524;
+    color-scheme: dark;
+  }
+}
+
+@media (max-width: 720px) {
+  :root {
+    --gutter: 20px;
+    --header-h: 64px;
+  }
+}
+
+/* Elements drawn for one theme only. */
+:root[data-theme='dark'] .only-light,
+:root[data-theme='light'] .only-dark {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .only-light { display: none; }
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .only-dark { display: none; }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-text);
+  -webkit-font-smoothing: antialiased;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+::selection { background: var(--selection); color: var(--ink); }
+
+a { color: var(--ink); text-decoration: none; }
+
+/* Underlined link: ink text, hairline underline that darkens on hover. */
+.u {
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+}
+.u:hover { text-decoration-color: var(--ink); }
+
+.label {
+  font-family: var(--font-label);
+  font-size: 12.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.mono { font-family: var(--font-label); }
+
+:focus-visible { outline: 1px solid var(--ink); outline-offset: 3px; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Star twinkle, shared by the night sky layers. */
+@keyframes twinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+.t0 { animation: twinkle 4.2s ease-in-out infinite; }
+.t1 { animation: twinkle 5.6s ease-in-out -1.3s infinite; }
+.t2 { animation: twinkle 7.1s ease-in-out -2.9s infinite; }
+.t3 { animation: twinkle 8.8s ease-in-out -4.1s infinite; }
+.t4 { animation: twinkle 6.3s ease-in-out -5.2s infinite; }
+.t5 { animation: twinkle 9.7s ease-in-out -0.7s infinite; }
+.t6 { animation: twinkle 11.2s ease-in-out -6.6s infinite; }
+.t7 { animation: twinkle 5.1s ease-in-out -3.4s infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .t0, .t1, .t2, .t3, .t4, .t5, .t6, .t7 { animation: none; }
+}
+
+/* Reading column shared by Writing, posts, tags, colophon, 404. */
+.column {
+  width: min(var(--measure), 100%);
+  margin: 0 auto;
+  padding-top: 88px;
+  display: flex;
+  flex-direction: column;
+}
+@media (max-width: 720px) {
+  .column { padding-top: 48px; }
+}
+
+.page-title {
+  margin: 0;
+  font-weight: 500;
+  font-size: 40px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+@media (max-width: 720px) {
+  .page-title { font-size: 34px; }
+}

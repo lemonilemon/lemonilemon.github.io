@@ -1,0 +1,12 @@
+---
+// The site mark: an orbit, and the body going round it.
+interface Props {
+  size?: number;
+}
+const { size = 14 } = Astro.props;
+---
+
+<svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true">
+  <path d="M12.2 10 A6 6 0 1 1 12.2 4" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-opacity="0.45"></path>
+  <circle cx="12.2" cy="4" r="1.5" fill="currentColor"></circle>
+</svg>

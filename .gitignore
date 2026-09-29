@@ -1,2 +1,6 @@
 .*
-public/
+!.github/
+!.gitignore
+!.envrc
+node_modules/
+dist/

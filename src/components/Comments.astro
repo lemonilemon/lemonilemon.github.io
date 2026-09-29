@@ -1,0 +1,63 @@
+---
+// giscus (GitHub Discussions). Renders nothing until GISCUS ids are set.
+import { GISCUS } from '../consts';
+
+const ready = GISCUS.repoId !== '' && GISCUS.categoryId !== '';
+---
+
+{
+  ready && (
+    <section class="comments" aria-labelledby="comments-title">
+      <h2 class="label" id="comments-title">Comments</h2>
+      <div class="giscus" data-repo={GISCUS.repo} data-repo-id={GISCUS.repoId} data-category={GISCUS.category} data-category-id={GISCUS.categoryId} />
+    </section>
+  )
+}
+
+<script>
+  import { currentTheme } from '../scripts/theme';
+
+  const host = document.querySelector<HTMLElement>('.giscus');
+  const giscusTheme = () => (currentTheme() === 'dark' ? 'dark' : 'light');
+
+  if (host) {
+    const script = document.createElement('script');
+    script.src = 'https://giscus.app/client.js';
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    const attrs: Record<string, string> = {
+      'data-repo': host.dataset.repo!,
+      'data-repo-id': host.dataset.repoId!,
+      'data-category': host.dataset.category!,
+      'data-category-id': host.dataset.categoryId!,
+      'data-mapping': 'pathname',
+      'data-strict': '1',
+      'data-reactions-enabled': '1',
+      'data-emit-metadata': '0',
+      'data-input-position': 'top',
+      'data-theme': giscusTheme(),
+      'data-lang': document.documentElement.lang.startsWith('zh') ? 'zh-TW' : 'en',
+      'data-loading': 'lazy',
+    };
+    for (const [key, value] of Object.entries(attrs)) script.setAttribute(key, value);
+    host.append(script);
+
+    document.addEventListener('themechange', () => {
+      const frame = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
+      frame?.contentWindow?.postMessage({ giscus: { setConfig: { theme: giscusTheme() } } }, 'https://giscus.app');
+    });
+  }
+</script>
+
+<style>
+  .comments {
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  h2 {
+    margin: 0;
+    font-weight: 400;
+  }
+</style>

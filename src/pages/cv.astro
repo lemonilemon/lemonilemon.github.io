@@ -1,0 +1,152 @@
+---
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import Base from '../layouts/Base.astro';
+import { CV } from '../consts';
+
+// Builds run from the project root, so public/ resolves from the working directory.
+const hasPdf = existsSync(resolve('public', `.${CV.pdf}`));
+---
+
+<Base title="CV" stars={907}>
+  <div class="cv">
+    <div class="head">
+      <h1 class="page-title">CV</h1>
+      {
+        hasPdf && (
+          <div class="actions">
+            {CV.updated && <span>Updated {CV.updated}</span>}
+            <a class="u download" href={CV.pdf} download>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 1.5v6.5M3.2 5.4 6 8.2l2.8-2.8M2 10.5h8" /></svg>
+              Download PDF
+            </a>
+          </div>
+        )
+      }
+    </div>
+    {
+      hasPdf ? (
+        <div class="pages" data-cv-pages data-src={CV.pdf} aria-label="CV, rendered from the PDF">
+          <noscript>
+            <p class="note">
+              The CV is a PDF: <a class="u" href={CV.pdf}>open it</a>.
+            </p>
+          </noscript>
+        </div>
+      ) : (
+        <p class="note">The CV is not up yet.</p>
+      )
+    }
+  </div>
+</Base>
+
+<script>
+  import * as pdfjs from 'pdfjs-dist';
+  import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
+  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+
+  const host = document.querySelector<HTMLElement>('[data-cv-pages]');
+
+  async function renderCv(host: HTMLElement) {
+    const pdf = await pdfjs.getDocument({ url: host.dataset.src! }).promise;
+    const ratio = Math.min(window.devicePixelRatio || 1, 3);
+    for (let n = 1; n <= pdf.numPages; n++) {
+      const page = await pdf.getPage(n);
+      const base = page.getViewport({ scale: 1 });
+      const width = host.clientWidth;
+      const viewport = page.getViewport({ scale: (width / base.width) * ratio });
+      const sheet = document.createElement('div');
+      sheet.className = 'sheet';
+      sheet.style.aspectRatio = `${base.width} / ${base.height}`;
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
+      canvas.setAttribute('role', 'img');
+      canvas.setAttribute('aria-label', `CV page ${n} of ${pdf.numPages}`);
+      sheet.append(canvas);
+      host.append(sheet);
+      await page.render({ canvas, viewport }).promise;
+    }
+    const text = await Promise.all(
+      Array.from({ length: pdf.numPages }, (_, i) => pdf.getPage(i + 1).then((p) => p.getTextContent())),
+    );
+    // Keep the text available to screen readers and find-in-page.
+    const plain = document.createElement('div');
+    plain.className = 'visually-hidden';
+    plain.textContent = text.map((t) => t.items.map((item) => ('str' in item ? item.str : '')).join(' ')).join('\n');
+    host.append(plain);
+  }
+
+  if (host) {
+    renderCv(host).catch(() => {
+      host.innerHTML = '';
+      const note = document.createElement('p');
+      note.className = 'note';
+      note.innerHTML = `The preview could not load. <a class="u" href="${host.dataset.src}">Open the PDF</a>.`;
+      host.append(note);
+    });
+  }
+</script>
+
+<style>
+  .cv {
+    width: min(760px, 100%);
+    margin: 0 auto;
+    padding-top: 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .actions {
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    font-family: var(--font-label);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .download {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 0;
+    margin: -12px 0;
+  }
+  .pages {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .pages :global(.sheet) {
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(23, 24, 26, 0.06);
+    overflow: hidden;
+  }
+  .pages :global(canvas) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .cv :global(.note) {
+    margin: 0;
+    font-size: 19px;
+    line-height: 1.75;
+    color: var(--body);
+  }
+  @media (max-width: 720px) {
+    .cv {
+      padding-top: 40px;
+    }
+  }
+</style>

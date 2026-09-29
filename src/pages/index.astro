@@ -1,0 +1,198 @@
+---
+import Base from '../layouts/Base.astro';
+import Day from '../components/home/Day.astro';
+import Night from '../components/home/Night.astro';
+import { LINKS } from '../consts';
+---
+
+<Base class="home">
+  <h1 class="visually-hidden">lemonilemon</h1>
+  <Night />
+  <Day />
+  <div class="intro">
+    <div class="words">
+      <p class="hello">Hello, world!</p>
+      <p class="about">I'm a CS &amp; Finance student in Taiwan. I write here about what I'm learning and what I'm working on.</p>
+    </div>
+    <div class="links">
+      <a class="u" href="/cv/">CV</a>
+      <a class="u" href={LINKS.github}>GitHub</a>
+      <a class="u" href={LINKS.linkedin}>LinkedIn</a>
+      <a class="u" href={LINKS.email}>Email</a>
+    </div>
+  </div>
+  <button type="button" class="play" slot="footer" aria-label="Pause" data-play>
+    <svg class="icon-pause" width="12" height="12" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><rect x="3" y="2.5" width="2.4" height="9" rx="0.6"></rect><rect x="8.6" y="2.5" width="2.4" height="9" rx="0.6"></rect></svg>
+    <svg class="icon-play" width="12" height="12" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M4 2.5v9l7.5-4.5z"></path></svg>
+  </button>
+</Base>
+
+<style>
+  /* Wide: the words on the left, the scene on the right, both centred
+     vertically and kept inside the page margins. One viewport, no scroll. */
+  :global(body.home) {
+    position: relative;
+    height: 100dvh;
+    overflow: hidden;
+  }
+  :global(body.home > main) {
+    position: static;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    align-items: center;
+    column-gap: 56px;
+    padding: 0 var(--gutter);
+  }
+  /* Each scene's SVG shows a region of the 1280×800 design frame
+     (--vb-*), scaled to fit its column and the viewport height. */
+  :global(.scene) {
+    position: relative;
+    z-index: 1;
+    grid-area: 1 / 2;
+    justify-self: end;
+    width: min(100%, var(--max-w), calc((100dvh - 240px) * var(--vb-w) / var(--vb-h)));
+    aspect-ratio: calc(var(--vb-w) / var(--vb-h));
+  }
+  :global(.scene.day) {
+    --max-w: 720px;
+  }
+  :global(.scene.night) {
+    --max-w: 600px;
+  }
+  :global(.scene svg) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  :global(.scene svg *) {
+    vector-effect: non-scaling-stroke;
+  }
+  :global(.phone-scene) {
+    display: none;
+  }
+
+  .intro {
+    position: relative;
+    z-index: 2;
+    grid-area: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    max-width: 520px;
+  }
+  .words {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .hello {
+    margin: 0;
+    font-weight: 500;
+    font-size: 60px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  .about {
+    margin: 0;
+    font-size: 23px;
+    line-height: 1.55;
+    color: var(--body);
+    text-wrap: pretty;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 24px;
+    font-family: var(--font-label);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+  }
+  .links a {
+    padding: 12px 0;
+    margin: -12px 0;
+  }
+
+  .play {
+    width: 44px;
+    height: 44px;
+    margin: -12px -12px -12px 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--faint);
+    cursor: pointer;
+  }
+  .play:hover {
+    color: var(--ink);
+  }
+  .play:focus-visible {
+    outline-offset: 2px;
+  }
+  .icon-play,
+  .play[data-paused] .icon-pause {
+    display: none;
+  }
+  .play[data-paused] .icon-play {
+    display: block;
+  }
+
+  /* Stacked: narrow or short screens. The scene fills the space above the
+     words; the page scrolls if it must. Keep in step with STACKED in
+     scripts/home/scene.ts. */
+  @media (max-width: 999px), (max-height: 560px) {
+    :global(body.home) {
+      height: auto;
+      min-height: 100dvh;
+      overflow: visible;
+    }
+    :global(body.home > main) {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 40px;
+      padding: 8px var(--gutter) 48px;
+    }
+    :global(.scene),
+    .play {
+      display: none;
+    }
+    :global(.phone-scene) {
+      display: block;
+      position: relative;
+      flex: 1 1 auto;
+      min-height: 280px;
+    }
+    :global(.day-phone) {
+      max-width: 640px;
+    }
+    /* The night sky runs to the screen edges. */
+    :global(.night-phone) {
+      margin: 0 calc(-1 * var(--gutter));
+    }
+    .intro {
+      max-width: 560px;
+      gap: 22px;
+    }
+    .words {
+      gap: 14px;
+    }
+    .hello {
+      font-size: 42px;
+    }
+    .about {
+      font-size: 19px;
+    }
+    .links {
+      gap: 0 20px;
+    }
+    .links a {
+      margin: 0;
+    }
+  }
+</style>

@@ -1,0 +1,77 @@
+---
+// The orrery's markup: trails, the Sun's halo, the bodies and one "Stand on"
+// button per body, all positioned by orrery.ts.
+import { BODY_LABEL, BODY_SCALE, SPARK } from '../../scripts/home/sky';
+
+interface Props {
+  class: string;
+  viewBox?: string;
+  style?: string;
+  [data: `data-${string}`]: boolean;
+}
+const { class: className, viewBox, style, ...data } = Astro.props;
+const names = ['sun', 'venus', 'earth', 'mars'] as const;
+---
+
+<div class={className} style={style} {...data}>
+  <svg viewBox={viewBox} aria-hidden="true">
+    <g fill="none" stroke="currentColor" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round" data-trails></g>
+    <circle r="16" fill="currentColor" fill-opacity="0.06" data-halo></circle>
+    <g fill="currentColor">
+      {names.map((n) => <path d={SPARK} data-body={n} data-scale={BODY_SCALE[n]} />)}
+    </g>
+  </svg>
+  {
+    names.map((n) => (
+      <button type="button" class="stand" aria-label={`Stand on ${BODY_LABEL[n]}`} aria-pressed="false" data-stand={n}>
+        <span class="ring" />
+      </button>
+    ))
+  }
+  <slot />
+</div>
+
+<style>
+  div > svg {
+    color: var(--ink);
+  }
+  .stand {
+    position: absolute;
+    z-index: 2;
+    width: 44px;
+    height: 44px;
+    margin: -22px 0 0 -22px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ring {
+    position: absolute;
+    inset: 10px;
+    border: 1px solid var(--ink);
+    border-radius: 999px;
+    opacity: 0;
+    transform: scale(0.6);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .stand:hover .ring,
+  .stand:focus-visible .ring {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  .stand:global(.here) .ring {
+    opacity: 0.28;
+    transform: scale(1.25);
+  }
+  .stand:focus-visible {
+    outline: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ring {
+      transition: none;
+    }
+  }
+</style>

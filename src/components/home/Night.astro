@@ -1,0 +1,110 @@
+---
+// Night: a star field and the inner planets, seen from wherever you stand.
+// On stacked (phone) layouts the orrery sits right of centre and its outer
+// paths run off the edge of the screen.
+import Orrery from './Orrery.astro';
+import { SPARK, VIEW, dots, sparks } from '../../scripts/home/sky';
+---
+
+<svg class="sky only-dark" viewBox="0 0 1280 800" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">
+  <g fill="currentColor">
+    {dots.map((s) => <circle class={s.cls} cx={s.x} cy={s.y} r={s.r} fill-opacity={s.o} />)}
+    {sparks.map((s) => <path class={s.cls} transform={s.tf} fill-opacity={s.o} d={SPARK} />)}
+  </g>
+</svg>
+
+<Orrery
+  class="scene night only-dark"
+  viewBox={`${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}`}
+  style={`--vb-x: ${VIEW.x}; --vb-y: ${VIEW.y}; --vb-w: ${VIEW.w}; --vb-h: ${VIEW.h};`}
+  data-night
+/>
+
+<Orrery class="phone-scene night-phone only-dark" data-night-phone>
+  <button type="button" class="play" aria-label="Pause" data-play>
+    <svg class="icon-pause" width="12" height="12" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><rect x="3" y="2.5" width="2.4" height="9" rx="0.6"></rect><rect x="8.6" y="2.5" width="2.4" height="9" rx="0.6"></rect></svg>
+    <svg class="icon-play" width="12" height="12" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M4 2.5v9l7.5-4.5z"></path></svg>
+  </button>
+</Orrery>
+
+<script>
+  import { Orrery, type OrreryFrame } from '../../scripts/home/orrery';
+  import { ORRERY, VIEW } from '../../scripts/home/sky';
+  import { register } from '../../scripts/home/controller';
+
+  const wide = document.querySelector<HTMLElement>('[data-night]');
+  if (wide) register('dark', 'wide', new Orrery(wide, { ...ORRERY, spark: 1, view: VIEW }));
+
+  const phone = document.querySelector<HTMLElement>('[data-night-phone]');
+  if (phone) {
+    const frame: OrreryFrame = { cx: 0, cy: 0, scale: 0, spark: 0.9, view: { x: 0, y: 0, w: 0, h: 0 } };
+    const scene = new Orrery(phone, frame);
+    const svg = phone.querySelector('svg')!;
+    const layout = () => {
+      const w = phone.clientWidth;
+      const h = phone.clientHeight;
+      if (!w || !h) return;
+      // 74px per AU on a 390px phone, smaller if the space is short: seen
+      // from Mars the Sun swings out to about 2.5 AU. The centre sits
+      // 1.2 AU in from the right edge, so the outer paths leave the screen.
+      const scale = Math.min(0.19 * w, (h / 2 - 16) / 2.52);
+      Object.assign(frame, { cx: w - 1.216 * scale, cy: h / 2, scale, view: { x: 0, y: 0, w, h } });
+      svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+      scene.redraw();
+    };
+    new ResizeObserver(layout).observe(phone);
+    layout();
+    register('dark', 'stacked', scene);
+  }
+</script>
+
+<style>
+  .sky {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    color: var(--ink);
+  }
+  :global(.night-phone > svg) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  .play {
+    position: absolute;
+    z-index: 3;
+    /* Same offset as the footer pause button on wide layouts. */
+    right: calc(var(--gutter) - 12px);
+    bottom: 0;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--faint);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .play:hover {
+    color: var(--ink);
+  }
+  .play:focus-visible {
+    outline-offset: -6px;
+  }
+  .icon-play,
+  [data-paused] .icon-pause {
+    display: none;
+  }
+  [data-paused] .icon-play {
+    display: block;
+  }
+</style>

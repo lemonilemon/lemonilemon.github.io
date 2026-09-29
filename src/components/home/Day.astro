@@ -1,0 +1,288 @@
+---
+// Day: a small Space Travel. Wide layouts draw it on a line-drawn laptop;
+// stacked (phone) layouts use the phone's own screen, framed by a hairline.
+import ScreenLayers from './ScreenLayers.astro';
+import { CENTRE, SCREEN, VIEW, glyphs, keys, pads, specks, trackpad } from '../../scripts/home/laptop';
+
+const pct = (x: number, y: number, w: number, h: number) =>
+  `left: ${((x - VIEW.x) / VIEW.w) * 100}%; top: ${((y - VIEW.y) / VIEW.h) * 100}%; width: ${(w / VIEW.w) * 100}%; height: ${(h / VIEW.h) * 100}%;`;
+const screenLabel =
+  'Space Travel. Hold on the screen to fly towards the pointer. Arrow keys turn and fire the engines, minus and plus change the scale. Land gently on a planet.';
+---
+
+<div class="scene day only-light" data-day style={`--vb-x: ${VIEW.x}; --vb-y: ${VIEW.y}; --vb-w: ${VIEW.w}; --vb-h: ${VIEW.h};`}>
+  <svg viewBox={`${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}`} aria-hidden="true">
+    <defs>
+      <clipPath id="day-screen"><rect x={SCREEN.x} y={SCREEN.y} width={SCREEN.w} height={SCREEN.h} rx="3"></rect></clipPath>
+    </defs>
+    <path class="paper line" d="M700 462 V162 A14 14 0 0 1 714 148 H1186 A14 14 0 0 1 1200 162 V462 Z" stroke-width="1.2" stroke-linejoin="round"></path>
+    <rect class="glass line" x={SCREEN.x} y={SCREEN.y} width={SCREEN.w} height={SCREEN.h} rx="3" stroke-opacity="0.35" stroke-width="0.8"></rect>
+    <circle cx="950" cy="156" r="1.6" fill="currentColor" fill-opacity="0.5"></circle>
+    <path class="paper line" d="M700 462 L1200 462 L1240 548 L660 548 Z" stroke-width="1.2" stroke-linejoin="round"></path>
+    <path class="paper line" d="M660 548 L1240 548 L1235 556 Q1234 558 1230 558 L670 558 Q666 558 665 556 Z" stroke-width="1.2" stroke-linejoin="round"></path>
+    <path class="line" d="M905 548 L995 548" stroke-opacity="0.35" stroke-width="0.8"></path>
+    <g class="line" stroke-width="0.8" stroke-linejoin="round">
+      {keys.map((k) => <polygon class="key" points={k.pts} stroke-opacity={k.id ? 0.9 : 0.4} data-key={k.id ?? undefined} />)}
+      <polygon class="key" points={trackpad} stroke-opacity="0.3"></polygon>
+    </g>
+    <g fill="currentColor">
+      {glyphs.map((g) => <polygon class="glyph" points={g.pts} data-glyph={g.id} />)}
+    </g>
+    <g clip-path="url(#day-screen)">
+      <g fill="currentColor">
+        {specks.map((s) => <circle class={s.cls} cx={s.x} cy={s.y} r={s.r} fill-opacity={s.o} />)}
+      </g>
+      <ScreenLayers />
+      <text class="hud readout" x="728" y="432" fill="currentColor" fill-opacity="0.62" data-hud>LANDED · EARTH</text>
+      <text class="hud readout" x="1172" y="432" text-anchor="end" fill="currentColor" fill-opacity="0.45" data-zoom>×6.4</text>
+      <g style="display: none" data-egg>
+        <rect class="glass" x={SCREEN.x} y={SCREEN.y} width={SCREEN.w} height={SCREEN.h} fill-opacity="0.92"></rect>
+        <text class="prompt" x="736" y="194" fill="currentColor">$</text>
+        <rect x="750" y="184" width="8" height="13" fill="currentColor" fill-opacity="0.7"></rect>
+      </g>
+      <g style="display: none" data-paused>
+        <rect class="glass" x={SCREEN.x} y={SCREEN.y} width={SCREEN.w} height={SCREEN.h} fill-opacity="0.86"></rect>
+        <text class="paused-title" x={CENTRE.x} y={SCREEN.y + SCREEN.h * 0.7} text-anchor="middle" fill="currentColor">PAUSED</text>
+        <text class="hud" x={CENTRE.x} y={SCREEN.y + SCREEN.h * 0.7 + 20} text-anchor="middle" fill="currentColor" fill-opacity="0.5">CLICK TO RESUME</text>
+      </g>
+    </g>
+  </svg>
+  <button type="button" class="screen" style={pct(SCREEN.x, SCREEN.y, SCREEN.w, SCREEN.h)} aria-label={screenLabel} data-screen></button>
+  {pads.map((p) => <button type="button" class="pad" tabindex="-1" aria-hidden="true" style={pct(p.x, p.y, p.w, p.h)} data-pad={p.id} />)}
+</div>
+
+<div class="phone-scene day-phone only-light" data-day-phone>
+  <svg aria-hidden="true">
+    <defs>
+      <clipPath id="day-phone-screen"><rect rx="10" data-screen-rect></rect></clipPath>
+    </defs>
+    <rect class="glass line" rx="10" stroke-opacity="0.35" stroke-width="1" data-screen-rect></rect>
+    <g clip-path="url(#day-phone-screen)">
+      <g fill="currentColor" data-specks></g>
+      <ScreenLayers />
+      <text class="hud readout" x="14" fill="currentColor" fill-opacity="0.62" data-hud>LANDED · EARTH</text>
+      <text class="hud readout" text-anchor="end" y="20" fill="currentColor" fill-opacity="0.45" data-zoom>×6.4</text>
+      <g style="display: none" data-egg>
+        <rect class="glass" fill-opacity="0.92" data-screen-rect></rect>
+        <text class="prompt" x="20" y="32" fill="currentColor">$</text>
+        <rect x="34" y="22" width="8" height="13" fill="currentColor" fill-opacity="0.7"></rect>
+      </g>
+      <g style="display: none" data-paused>
+        <rect class="glass" fill-opacity="0.86" data-screen-rect></rect>
+        <text class="paused-title" text-anchor="middle" fill="currentColor" data-centre="0">PAUSED</text>
+        <text class="hud" text-anchor="middle" fill="currentColor" fill-opacity="0.5" data-centre="20">TAP TO RESUME</text>
+      </g>
+    </g>
+  </svg>
+  <button type="button" class="screen phone-screen" aria-label={screenLabel} data-screen></button>
+  <div class="keys">
+    <button type="button" class="key-button" aria-label="Zoom out" data-zoom-step="-1">
+      <span class="cap"><svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"><rect x="1.5" y="4.4" width="7" height="1.2"></rect></svg></span>
+    </button>
+    <button type="button" class="key-button" aria-label="Zoom in" data-zoom-step="1">
+      <span class="cap"><svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"><rect x="1.5" y="4.4" width="7" height="1.2"></rect><rect x="4.4" y="1.5" width="1.2" height="7"></rect></svg></span>
+    </button>
+    <button type="button" class="key-button" aria-label="Pause" data-play>
+      <span class="cap">
+        <svg class="icon-pause" width="10" height="10" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><rect x="3" y="2.5" width="2.4" height="9" rx="0.6"></rect><rect x="8.6" y="2.5" width="2.4" height="9" rx="0.6"></rect></svg>
+        <svg class="icon-play" width="10" height="10" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M4 2.5v9l7.5-4.5z"></path></svg>
+      </span>
+    </button>
+  </div>
+</div>
+
+<script>
+  import { SpaceTravel, type ScreenFrame } from '../../scripts/home/space-travel';
+  import { CENTRE, SCREEN } from '../../scripts/home/laptop';
+  import { register } from '../../scripts/home/controller';
+  import { seeded } from '../../lib/random';
+
+  const laptop = document.querySelector<HTMLElement>('[data-day]');
+  if (laptop) register('light', 'wide', new SpaceTravel(laptop, { cx: CENTRE.x, cy: CENTRE.y, w: SCREEN.w, h: SCREEN.h }));
+
+  const phone = document.querySelector<HTMLElement>('[data-day-phone]');
+  if (phone) {
+    const frame: ScreenFrame = { cx: 0, cy: 0, w: 0, h: 0 };
+    const scene = new SpaceTravel(phone, frame);
+    const svg = phone.querySelector('svg')!;
+    const hud = phone.querySelector<SVGTextElement>('[data-hud]')!;
+    const zoom = phone.querySelector<SVGTextElement>('[data-zoom]')!;
+    const specks = phone.querySelector<SVGGElement>('[data-specks]')!;
+
+    // Faint stars, placed in unit coordinates so they survive a resize.
+    // About one per 2,500 square pixels, as on the laptop screen.
+    const rnd = seeded(1969);
+    const field = Array.from({ length: 160 }, () => {
+      const m = Math.pow(rnd(), 2);
+      return { u: rnd(), v: rnd(), r: 0.5 + m * 0.9, o: 0.16 + m * 0.36, cls: `t${Math.floor(rnd() * 4)}` };
+    });
+
+    const layout = () => {
+      const w = phone.clientWidth;
+      const h = phone.clientHeight;
+      if (!w || !h) return;
+      Object.assign(frame, { cx: w / 2, cy: h / 2, w, h });
+      svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+      for (const rect of phone.querySelectorAll('[data-screen-rect]')) {
+        rect.setAttribute('x', '0.5');
+        rect.setAttribute('y', '0.5');
+        rect.setAttribute('width', `${w - 1}`);
+        rect.setAttribute('height', `${h - 1}`);
+      }
+      hud.setAttribute('y', `${h - 21}`);
+      for (const text of phone.querySelectorAll<SVGTextElement>('[data-centre]')) {
+        text.setAttribute('x', `${w / 2}`);
+        // Below the centre, where the followed planet sits.
+        text.setAttribute('y', `${h * 0.7 + Number(text.dataset.centre)}`);
+      }
+      zoom.setAttribute('x', `${w - 12}`);
+      specks.replaceChildren(
+        ...field.slice(0, Math.min(field.length, Math.round((w * h) / 2500))).map((s) => {
+          const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          c.setAttribute('class', s.cls);
+          c.setAttribute('cx', `${Math.round(s.u * w * 10) / 10}`);
+          c.setAttribute('cy', `${Math.round(s.v * h * 10) / 10}`);
+          c.setAttribute('r', `${Math.round(s.r * 100) / 100}`);
+          c.setAttribute('fill-opacity', `${Math.round(s.o * 100) / 100}`);
+          return c;
+        }),
+      );
+      scene.redraw();
+    };
+    new ResizeObserver(layout).observe(phone);
+    layout();
+    register('light', 'stacked', scene);
+  }
+</script>
+
+<style>
+  .day > svg,
+  .day-phone > svg {
+    color: var(--ink);
+  }
+  .day :global(.line),
+  .day-phone :global(.line) {
+    stroke: currentColor;
+  }
+  .paper,
+  .key {
+    fill: var(--bg);
+  }
+  .key[data-on] {
+    fill: var(--key-down);
+  }
+  .day :global(.glass),
+  .day-phone :global(.glass) {
+    fill: var(--screen);
+  }
+  .glyph {
+    fill-opacity: 0.7;
+  }
+  .glyph[data-on] {
+    fill-opacity: 1;
+  }
+  .day :global(.hud),
+  .day-phone :global(.hud) {
+    font-family: var(--font-label);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+  }
+  .day-phone :global(.hud) {
+    font-size: 10px;
+  }
+  .day .readout {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    white-space: pre;
+  }
+  .day-phone .readout {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    white-space: pre;
+  }
+  .prompt {
+    font-family: var(--font-label);
+    font-size: 13px;
+  }
+  .paused-title {
+    font-family: var(--font-label);
+    font-size: 12px;
+    letter-spacing: 0.24em;
+  }
+  .screen,
+  .pad {
+    position: absolute;
+    z-index: 2;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .screen {
+    border-radius: 4px;
+    cursor: crosshair;
+  }
+  .phone-screen {
+    inset: 0;
+    border-radius: 10px;
+  }
+  .pad {
+    cursor: pointer;
+  }
+
+  .day-phone > svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .keys {
+    position: absolute;
+    z-index: 3;
+    right: 4px;
+    bottom: 4px;
+    display: flex;
+  }
+  .key-button {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cap {
+    width: 32px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0.8px solid color-mix(in srgb, var(--ink) 90%, transparent);
+    border-radius: 3px;
+    background: var(--bg);
+  }
+  .key-button:active .cap {
+    background: var(--key-down);
+  }
+  .key-button:focus-visible {
+    outline: none;
+  }
+  .key-button:focus-visible .cap {
+    outline: 1px solid var(--ink);
+    outline-offset: 2px;
+  }
+  .icon-play,
+  [data-paused] .icon-pause {
+    display: none;
+  }
+  [data-paused] .icon-play {
+    display: block;
+  }
+</style>

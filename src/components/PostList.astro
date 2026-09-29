@@ -1,0 +1,84 @@
+---
+// Posts grouped by year: title left, date right, hairline between rows.
+import { formatDate, htmlLang, yearOf, type Post } from '../lib/posts';
+
+interface Props {
+  posts: Post[];
+}
+const groups = new Map<string, Post[]>();
+for (const post of Astro.props.posts) {
+  const year = yearOf(post.data.date);
+  groups.set(year, [...(groups.get(year) ?? []), post]);
+}
+---
+
+{
+  [...groups].map(([year, posts]) => (
+    <section class="year" aria-labelledby={`y${year}`}>
+      <h2 class="label" id={`y${year}`}>{year}</h2>
+      <ul>
+        {posts.map((post) => (
+          <li>
+            <a class="row" href={`/posts/${post.id}/`}>
+              <span class="title" lang={htmlLang(post.data.lang)}>{post.data.title}</span>
+              <time class="date" datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))
+}
+
+<style>
+  .year {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  h2 {
+    margin: 0;
+    font-weight: 400;
+  }
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--rule);
+  }
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 32px;
+    align-items: baseline;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .title {
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1.35;
+    text-wrap: pretty;
+  }
+  .row:hover .title {
+    text-decoration: underline;
+    text-decoration-color: var(--rule-strong);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 6px;
+  }
+  .date {
+    font-family: var(--font-label);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  @media (max-width: 720px) {
+    .row {
+      grid-template-columns: 1fr;
+      gap: 6px;
+      padding: 18px 0;
+    }
+    .title {
+      font-size: 21px;
+    }
+  }
+</style>

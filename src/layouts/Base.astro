@@ -1,0 +1,75 @@
+---
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import SideStars from '../components/SideStars.astro';
+import { SITE } from '../consts';
+import '@fontsource/spectral/400.css';
+import '@fontsource/spectral/400-italic.css';
+import '@fontsource/spectral/500.css';
+import '@fontsource/spectral/500-italic.css';
+import '@fontsource/spectral/600.css';
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/500.css';
+import '@fontsource-variable/noto-serif-tc/wght.css';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  lang?: string;
+  // Seed for the night-sky gutters; omit for pages that draw their own sky.
+  stars?: number;
+  class?: string;
+}
+
+const { title, description = SITE.description, lang = 'en', stars, class: className } = Astro.props;
+const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate" type="application/rss+xml" title={SITE.name} href="/rss.xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="theme-color" content="#fbfaf7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0e1014" media="(prefers-color-scheme: dark)" />
+    <script is:inline>
+      (() => {
+        let theme = null;
+        try {
+          theme = localStorage.getItem('theme');
+        } catch {}
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+    <slot name="head" />
+  </head>
+  <body class={className}>
+    {stars !== undefined && <SideStars seed={stars} />}
+    <Header />
+    <main>
+      <slot />
+    </main>
+    <Footer><slot name="footer" /></Footer>
+  </body>
+</html>
+
+<style>
+  main {
+    position: relative;
+    z-index: 1;
+    flex-grow: 1;
+    padding: 0 var(--gutter) 96px;
+  }
+</style>

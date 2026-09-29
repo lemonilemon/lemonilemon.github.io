@@ -1,0 +1,67 @@
+---
+// Night only: a few stars in the side gutters of the reading pages.
+// Each gutter is a 282px strip drawn at native size (never scaled), with the
+// stars 16–266px from the page edge, as on the 1280px design frame.
+import { round, seeded } from '../lib/random';
+
+interface Props {
+  seed: number;
+}
+const HEIGHT = 1600;
+const rnd = seeded(Astro.props.seed);
+const left: Star[] = [];
+const right: Star[] = [];
+type Star = { x: number; y: number; r: number; o: number; cls: string };
+for (let i = 0; i < Math.round((HEIGHT / 800) * 54); i++) {
+  const side = rnd() < 0.5 ? left : right;
+  const x = 16 + rnd() * 250;
+  const y = 96 + rnd() * (HEIGHT - 150);
+  const m = Math.pow(rnd(), 3);
+  side.push({ x: round(side === left ? x : 282 - x), y: round(y), r: round(0.5 + m * 1.2, 2), o: round(0.16 + m * 0.5, 2), cls: `s${Math.floor(rnd() * 4)}` });
+}
+---
+
+{
+  [left, right].map((stars, i) => (
+    <svg class:list={['side-stars', 'only-dark', i ? 'right' : 'left']} width="282" height={HEIGHT} viewBox={`0 0 282 ${HEIGHT}`} aria-hidden="true">
+      <g fill="currentColor">
+        {stars.map((s) => (
+          <circle class={s.cls} cx={s.x} cy={s.y} r={s.r} fill-opacity={s.o} />
+        ))}
+      </g>
+    </svg>
+  ))
+}
+
+<style>
+  .side-stars {
+    position: fixed;
+    top: 0;
+    z-index: 0;
+    pointer-events: none;
+    color: var(--ink);
+  }
+  .left {
+    left: 0;
+  }
+  .right {
+    right: 0;
+  }
+  /* The 680px column needs 282px gutters on each side. */
+  @media (max-width: 1243px) {
+    .side-stars {
+      display: none !important;
+    }
+  }
+  @keyframes side-twinkle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+  }
+  .s0 { animation: side-twinkle 5.2s ease-in-out infinite; }
+  .s1 { animation: side-twinkle 7.4s ease-in-out -2.1s infinite; }
+  .s2 { animation: side-twinkle 9.1s ease-in-out -4.6s infinite; }
+  .s3 { animation: side-twinkle 11.3s ease-in-out -1.2s infinite; }
+  @media (prefers-reduced-motion: reduce) {
+    .s0, .s1, .s2, .s3 { animation: none; }
+  }
+</style>

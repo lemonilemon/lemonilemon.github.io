@@ -1,0 +1,34 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostList from '../../components/PostList.astro';
+import { getPosts } from '../../lib/posts';
+
+const posts = await getPosts();
+---
+
+<Base title="Writing" stars={311}>
+  <div class="column">
+    <div class="intro">
+      <h1 class="page-title">Writing</h1>
+      <p>Notes on what I'm learning and working on.</p>
+    </div>
+    <PostList posts={posts} />
+  </div>
+</Base>
+
+<style>
+  .column {
+    gap: 40px;
+  }
+  .intro {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  p {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+</style>

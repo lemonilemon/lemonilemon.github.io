@@ -1,0 +1,31 @@
+{
+  "name": "lemonilemon.github.io",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "allowScripts": {
+    "esbuild": true
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@astrojs/markdown-satteri": "^0.4.2",
+    "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.7.4",
+    "@fontsource-variable/noto-serif-tc": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/spectral": "^5.3.0",
+    "astro": "^7.3.5",
+    "katex": "^0.18.9",
+    "pdfjs-dist": "^6.3.289",
+    "satteri": "^0.10.5",
+    "typescript": "^6.0.3"
+  }
+}

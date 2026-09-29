@@ -1,0 +1,114 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Comments from '../../components/Comments.astro';
+import { formatDate, getPosts, htmlLang, langLabel, readingMinutes, tagSlug, type Post } from '../../lib/posts';
+import '../../styles/prose.css';
+import katexCss from 'katex/dist/katex.min.css?url';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post, i) => ({
+    params: { slug: post.id },
+    props: { post, newer: posts[i - 1], older: posts[i + 1] },
+  }));
+}
+
+interface Props {
+  post: Post;
+  newer?: Post;
+  older?: Post;
+}
+
+const { post, newer, older } = Astro.props;
+const { Content } = await render(post);
+const { title, description, date, updated, lang, tags, math, comments } = post.data;
+---
+
+<Base title={title} description={description} lang={htmlLang(lang)} stars={521}>
+  {math && <link slot="head" rel="stylesheet" href={katexCss} />}
+  <article class="column">
+    <a class="u label back" href="/posts/" lang="en">Writing</a>
+    <h1>{title}</h1>
+    <div class="meta" lang="en">
+      <time datetime={date.toISOString()}>{formatDate(date)}</time>
+      {updated && <span>updated <time datetime={updated.toISOString()}>{formatDate(updated)}</time></span>}
+      <span>{readingMinutes(post)} min</span>
+      <span lang={htmlLang(lang)}>{langLabel(lang)}</span>
+      {tags.map((tag) => <a class="u" href={`/tags/${tagSlug(tag)}/`}>#{tagSlug(tag)}</a>)}
+    </div>
+    <div class="prose">
+      <Content />
+    </div>
+    <nav class="pager" aria-label="More writing" lang="en">
+      {older ? <a class="u" href={`/posts/${older.id}/`} rel="prev">← Older: <span lang={htmlLang(older.data.lang)}>{older.data.title}</span></a> : <span>← Older: none yet</span>}
+      {newer ? <a class="u" href={`/posts/${newer.id}/`} rel="next">Newer: <span lang={htmlLang(newer.data.lang)}>{newer.data.title}</span> →</a> : <span>Newer: none yet →</span>}
+    </nav>
+    {comments && <Comments />}
+  </article>
+</Base>
+
+<style>
+  .column {
+    padding-top: 72px;
+  }
+  .back {
+    align-self: flex-start;
+    margin-bottom: 44px;
+  }
+  h1 {
+    margin: 0 0 18px;
+    font-weight: 600;
+    font-size: 42px;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .meta {
+    margin-bottom: 48px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    font-family: var(--font-label);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .meta a {
+    color: var(--muted);
+  }
+  .pager {
+    margin-top: 64px;
+    padding-top: 28px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    font-family: var(--font-label);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .pager a {
+    color: var(--muted);
+  }
+  .pager > :last-child {
+    text-align: right;
+  }
+  @media (max-width: 720px) {
+    .column {
+      padding-top: 40px;
+    }
+    .back {
+      margin-bottom: 32px;
+    }
+    h1 {
+      font-size: 32px;
+    }
+    .pager {
+      flex-direction: column;
+      gap: 12px;
+    }
+    .pager > :last-child {
+      text-align: left;
+    }
+  }
+</style>

@@ -1,5 +1,5 @@
 {
-  description = "A Hugo blog project";
+  description = "lemonilemon's personal site, built with Astro";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -9,20 +9,11 @@
     { self, nixpkgs }:
     let
       system = "x86_64-linux";
-      pkgs = import nixpkgs {
-        inherit system;
-        config.allowUnfree = true;
-      };
+      pkgs = import nixpkgs { inherit system; };
     in
     {
       devShells.${system}.default = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          hugo
-          nodejs
-          go
-        ];
+        buildInputs = [ pkgs.nodejs_24 ];
       };
-
-      packages.${system}.default = pkgs.hugo;
     };
 }

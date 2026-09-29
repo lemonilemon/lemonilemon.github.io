@@ -1,7 +1,7 @@
 export const SITE = {
   name: 'lemonilemon',
   author: 'Jasper Tsai',
-  description: "Jasper Tsai (lemonilemon)'s personal website: notes on what I'm learning and working on.",
+  description: "lemonilemon's personal website: notes on what I'm learning and working on.",
   since: 2025,
   source: 'https://github.com/lemonilemon/lemonilemon.github.io',
 };

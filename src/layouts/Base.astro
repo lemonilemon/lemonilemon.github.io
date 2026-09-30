@@ -39,6 +39,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta name="author" content={SITE.author} />
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex" />}
+    {/* Google Search does not take SVG favicons, so it gets the PNG; browsers
+        take the SVG, declared last, which follows the colour scheme. */}
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="alternate" type="application/rss+xml" title={SITE.name} href="/rss.xml" />
     <link rel="sitemap" href="/sitemap-index.xml" />

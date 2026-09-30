@@ -113,4 +113,17 @@ const nav = [
       margin-left: 0;
     }
   }
+  /* Two nav links leave the brand almost touching them on the narrowest phones. */
+  @media (max-width: 359px) {
+    .header {
+      padding-right: 6px;
+    }
+    .brand {
+      gap: 6px;
+      font-size: 17px;
+    }
+    .nav a {
+      padding: 0 6px;
+    }
+  }
 </style>

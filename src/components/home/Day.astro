@@ -7,7 +7,7 @@ import { CENTRE, SCREEN, VIEW, glyphs, keys, pads, specks, trackpad } from '../.
 const pct = (x: number, y: number, w: number, h: number) =>
   `left: ${((x - VIEW.x) / VIEW.w) * 100}%; top: ${((y - VIEW.y) / VIEW.h) * 100}%; width: ${(w / VIEW.w) * 100}%; height: ${(h / VIEW.h) * 100}%;`;
 const screenLabel =
-  'Space Travel. Hold on the screen to fly towards the pointer. Arrow keys turn and fire the engines, minus and plus change the scale. Land gently on a planet.';
+  'Space Travel. Hold on the screen to fly towards the pointer, or on a touch screen drag from where you touch to steer. Arrow keys turn and fire the engines, minus and plus change the scale. Land gently on a planet.';
 ---
 
 <div class="scene day only-light" data-day style={`--vb-x: ${VIEW.x}; --vb-y: ${VIEW.y}; --vb-w: ${VIEW.w}; --vb-h: ${VIEW.h};`}>

@@ -29,6 +29,16 @@ interface Ship extends Vec {
   sample: number;
   fwd: boolean;
   back: boolean;
+  pow: number; // share of full thrust while fwd
+}
+
+// A touch steers with a stick drawn where the finger lands: the drag's
+// direction is the heading, its length the thrust. Distances in CSS pixels.
+interface Stick {
+  id: number;
+  o: [number, number]; // where the touch landed, as a screen offset
+  p: [number, number]; // where it is now
+  k: number; // screen units per CSS pixel
 }
 
 const STEP = 1 / 240; // simulation step
@@ -39,6 +49,8 @@ const SLOW = 0.6; // pace multiplier close to a planet's surface, for landing
 const LOW = 12; // altitude below which a planet's surface counts as close
 const TURN = 3.2; // radians per real second, arrow keys
 const AIM = 9; // radians per real second, turning towards a held pointer
+const STICK = 44; // drag for full thrust, CSS pixels
+const STICK_DEAD = 8; // a shorter drag steers nothing, so a thumb can rest
 const EGG_SECONDS = 8;
 const NEAR_MISS = 60; // show a planet's ghost when the path passes this close
 const SVG = 'http://www.w3.org/2000/svg';
@@ -50,7 +62,7 @@ export class SpaceTravel implements Scene {
   private tau = 0;
   private pace = PACE;
   private started = false;
-  private inp = { l: false, r: false, t: false, b: false, p: null as [number, number] | null };
+  private inp = { l: false, r: false, t: false, b: false, p: null as [number, number] | null, stick: null as Stick | null };
   private visited: Partial<Record<Name, boolean>> = {};
   private egg = 0;
   private eggDone = false;
@@ -79,6 +91,9 @@ export class SpaceTravel implements Scene {
     fwd: SVGPathElement;
     back: SVGPathElement;
     boom: SVGPathElement;
+    stick: SVGGElement;
+    stickRing: SVGCircleElement;
+    stickKnob: SVGCircleElement;
     hud: SVGTextElement;
     zoom: SVGTextElement;
     egg: SVGGElement;
@@ -116,6 +131,9 @@ export class SpaceTravel implements Scene {
       fwd: q('[data-fwd]'),
       back: q('[data-back]'),
       boom: q('[data-boom]'),
+      stick: q('[data-stick]'),
+      stickRing: q('[data-stick-ring]'),
+      stickKnob: q('[data-stick-knob]'),
       hud: q('[data-hud]'),
       zoom: q('[data-zoom]'),
       egg: q('[data-egg]'),
@@ -150,7 +168,7 @@ export class SpaceTravel implements Scene {
     const R = BODIES.earth.R + 0.05;
     this.ship = {
       x: e.x + R * Math.cos(a), y: e.y + R * Math.sin(a), vx: e.vx, vy: e.vy,
-      th: a, landed: { n: 'earth', a }, dead: 0, lost: false, trail: [], ref: 'earth', sample: 0, fwd: false, back: false,
+      th: a, landed: { n: 'earth', a }, dead: 0, lost: false, trail: [], ref: 'earth', sample: 0, fwd: false, back: false, pow: 0,
     };
   }
 
@@ -164,15 +182,27 @@ export class SpaceTravel implements Scene {
     const inp = this.inp;
     if (inp.l) s.th -= TURN * dt;
     if (inp.r) s.th += TURN * dt;
-    let fwd = inp.t;
+    let pow = inp.t ? 1 : 0;
     if (inp.p !== null && !s.dead) {
       const cam = this.camPos();
       const S = Math.exp(this.cam.logS);
       const d = wrap(Math.atan2(cam.y + inp.p[1] / S - s.y, cam.x + inp.p[0] / S - s.x) - s.th);
       s.th += Math.max(-AIM * dt, Math.min(AIM * dt, d));
-      if (Math.abs(d) < 0.5) fwd = true;
+      if (Math.abs(d) < 0.5) pow = 1;
     }
-    s.fwd = fwd && !s.dead;
+    const st = inp.stick;
+    if (st !== null && !s.dead) {
+      const dx = (st.p[0] - st.o[0]) / st.k;
+      const dy = (st.p[1] - st.o[1]) / st.k;
+      const len = Math.hypot(dx, dy);
+      if (len > STICK_DEAD) {
+        const d = wrap(Math.atan2(dy, dx) - s.th);
+        s.th += Math.max(-AIM * dt, Math.min(AIM * dt, d));
+        if (Math.abs(d) < 0.5) pow = Math.max(pow, Math.min(1, (len - STICK_DEAD) / (STICK - STICK_DEAD)));
+      }
+    }
+    s.fwd = pow > 0 && !s.dead;
+    s.pow = pow;
     s.back = inp.b && !s.dead;
   }
 
@@ -195,7 +225,7 @@ export class SpaceTravel implements Scene {
       }
       return;
     }
-    const push = (s.fwd ? THRUST : 0) - (s.back ? THRUST * REVERSE : 0);
+    const push = (s.fwd ? THRUST * s.pow : 0) - (s.back ? THRUST * REVERSE : 0);
     const out = advance(s, this.tau - h, h, push * Math.cos(s.th), push * Math.sin(s.th));
     if (out.kind === 'crashed' || out.kind === 'lost') {
       s.dead = 1.4;
@@ -381,10 +411,28 @@ export class SpaceTravel implements Scene {
     el.ship.style.display = dead ? 'none' : '';
     el.boom.style.display = dead ? '' : 'none';
     el.fwd.style.display = s.fwd ? '' : 'none';
+    // The flame grows with the thrust (always full from the keys).
+    if (s.fwd) el.fwd.setAttribute('d', `M0 4 L0 ${r1(4 + Math.max(2, 7 * s.pow))}`);
     el.back.style.display = s.back ? '' : 'none';
     const deg = Math.round(((((s.th * 180) / Math.PI + 90) % 360) + 360) % 360 * 10) / 10;
     el.ship.setAttribute('transform', `translate(${r1(sp[0])} ${r1(sp[1])}) rotate(${deg})`);
     el.boom.setAttribute('transform', `translate(${r1(sp[0])} ${r1(sp[1])})`);
+
+    // The stick: a ring where the touch landed, a knob that follows it.
+    const st = this.inp.stick;
+    el.stick.style.display = st && live ? '' : 'none';
+    if (st) {
+      const R = STICK * st.k;
+      let kx = st.p[0] - st.o[0];
+      let ky = st.p[1] - st.o[1];
+      const len = Math.hypot(kx, ky);
+      if (len > R) {
+        kx *= R / len;
+        ky *= R / len;
+      }
+      attr(el.stickRing, { cx: r1(cx + st.o[0]), cy: r1(cy + st.o[1]), r: r1(R) });
+      attr(el.stickKnob, { cx: r1(cx + st.o[0] + kx), cy: r1(cy + st.o[1] + ky), r: r1(12 * st.k) });
+    }
 
     let hud: string;
     if (dead) hud = s.lost ? 'LOST IN SPACE' : 'CRASHED';
@@ -428,15 +476,29 @@ export class SpaceTravel implements Scene {
         this.togglePlay();
         return;
       }
+      // One finger steers; a second one does nothing until it lifts.
+      if (this.inp.p !== null || this.inp.stick !== null) return;
       capture(e);
       this.started = true;
-      this.inp.p = this.pointerOffset(e);
+      const at = this.pointerOffset(e);
+      if (e.pointerType === 'touch') {
+        this.inp.stick = { id: e.pointerId, o: at, p: at, k: this.frame.w / screen.getBoundingClientRect().width };
+      } else {
+        this.inp.p = at;
+      }
       this.dirty = true;
     });
     screen.addEventListener('pointermove', (e) => {
-      if (this.inp.p !== null) this.inp.p = this.pointerOffset(e);
+      const st = this.inp.stick;
+      if (st !== null) {
+        if (e.pointerId === st.id) st.p = this.pointerOffset(e);
+      } else if (this.inp.p !== null) {
+        this.inp.p = this.pointerOffset(e);
+      }
     });
-    const release = () => {
+    const release = (e: PointerEvent) => {
+      if (this.inp.stick !== null && e.pointerId !== this.inp.stick.id) return;
+      this.inp.stick = null;
       this.inp.p = null;
       this.dirty = true;
     };
@@ -535,7 +597,7 @@ export class SpaceTravel implements Scene {
       const low = ref !== 'sun' && dist - BODIES[ref].R < LOW;
       const descending = (dx * (s.vx - rb.vx) + dy * (s.vy - rb.vy)) / dist < -0.3;
       const flying = !s.landed && !s.dead;
-      const coasting = flying && !low && !this.thrusting() && i.p === null;
+      const coasting = flying && !low && !this.thrusting() && i.p === null && i.stick === null;
       const target = coasting ? PACE * (ref === 'sun' ? WARP : WARP_NEAR) : flying && low && descending ? PACE * SLOW : PACE;
       this.pace += (target - this.pace) * (1 - Math.exp(-dt / 0.35));
       this.acc += dt * this.pace;

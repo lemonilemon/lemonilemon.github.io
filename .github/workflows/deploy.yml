@@ -25,16 +25,24 @@ jobs:
       name: cv
       deployment: false
     permissions: {}
+    outputs:
+      updated: ${{ steps.updated.outputs.date }}
     steps:
+      # The full history, for the date below, but only commits and trees:
+      # the sparse checkout downloads no file's contents except CV/public.pdf.
       - name: Fetch the public CV
         uses: actions/checkout@v7
         with:
           repository: lemonilemon/resume
           ssh-key: ${{ secrets.RESUME_DEPLOY_KEY }}
           path: .resume
+          fetch-depth: 0
           sparse-checkout: CV/public.pdf
           sparse-checkout-cone-mode: false
           persist-credentials: false
+      - name: Read when the CV last changed
+        id: updated
+        run: echo "date=$(git -C .resume log -1 --format=%cs -- CV/public.pdf)" >> "$GITHUB_OUTPUT"
       # Anyone can download a public repo's artifacts, so the stamp is checked
       # before the upload; the build checks it again (scripts/check-cv.ts).
       - name: Refuse anything but the public build
@@ -76,6 +84,7 @@ jobs:
         uses: withastro/action@v6
         env:
           SITE_URL: ${{ steps.pages.outputs.origin }}
+          CV_UPDATED: ${{ needs.cv.outputs.updated }}
   deploy:
     needs: build
     if: ${{ !cancelled() && needs.build.result == 'success' }}

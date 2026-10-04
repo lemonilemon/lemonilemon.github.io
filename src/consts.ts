@@ -16,10 +16,8 @@ export const LINKS = {
 
 // The CV page renders this file with PDF.js. The deploy workflow copies it from
 // the private resume repo; for a local preview, copy CV/public.pdf there.
-// `updated` is shown next to the download link, e.g. 'September 2026'.
 export const CV = {
   pdf: '/cv.pdf',
-  updated: null as string | null,
 };
 
 // giscus needs GitHub Discussions enabled on the repo and the giscus app

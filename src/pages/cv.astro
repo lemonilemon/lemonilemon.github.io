@@ -6,6 +6,10 @@ import { CV } from '../consts';
 
 // Builds run from the project root, so public/ resolves from the working directory.
 const hasPdf = existsSync(resolve('public', `.${CV.pdf}`));
+// The deploy workflow passes the date CV/public.pdf last changed in the resume repo.
+const updated = process.env.CV_UPDATED
+  ? new Date(`${process.env.CV_UPDATED}T00:00:00Z`).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+  : null;
 ---
 
 <Base title="CV" stars={907} noindex>
@@ -15,7 +19,7 @@ const hasPdf = existsSync(resolve('public', `.${CV.pdf}`));
       {
         hasPdf && (
           <div class="actions">
-            {CV.updated && <span>Updated {CV.updated}</span>}
+            {updated && <span class="updated">Updated {updated}</span>}
             <a class="u open" href={CV.pdf}>
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 2.5H2.5v7h7v-2M6.5 2h3.5v3.5M10 2 5.5 6.5" /></svg>
               Open PDF
@@ -30,16 +34,29 @@ const hasPdf = existsSync(resolve('public', `.${CV.pdf}`));
     </div>
     {
       hasPdf ? (
-        <div class="pages" data-cv-pages data-src={CV.pdf} aria-label="CV, rendered from the PDF">
-          {/* The first sheet holds the page's place while the PDF loads. */}
-          <div class="sheet" data-sheet>
-            <noscript>
-              <p class="note">
-                The CV is a PDF: <a class="u" href={CV.pdf}>open it</a>.
-              </p>
-            </noscript>
+        <>
+          <svg class="filters" aria-hidden="true" focusable="false">
+            {/* Dark mode: black to the ink, white to the surface; script keeps these on the theme's colors. */}
+            <filter id="cv-night" color-interpolation-filters="sRGB">
+              <feColorMatrix type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 1 0" />
+              <feComponentTransfer>
+                <feFuncR type="table" tableValues="0.9098 0.0902" />
+                <feFuncG type="table" tableValues="0.902 0.102" />
+                <feFuncB type="table" tableValues="0.8745 0.1255" />
+              </feComponentTransfer>
+            </filter>
+          </svg>
+          <div class="pages" data-cv-pages data-src={CV.pdf} aria-label="CV, rendered from the PDF">
+            {/* The first sheet holds the page's place while the PDF loads. */}
+            <div class="sheet" data-sheet>
+              <noscript>
+                <p class="note">
+                  The CV is a PDF: <a class="u" href={CV.pdf}>open it</a>.
+                </p>
+              </noscript>
+            </div>
           </div>
-        </div>
+        </>
       ) : (
         <p class="note">The CV is not up yet.</p>
       )
@@ -54,25 +71,35 @@ const hasPdf = existsSync(resolve('public', `.${CV.pdf}`));
 
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
-  type Sheet = { page: pdfjs.PDFPageProxy; el: HTMLElement; canvas?: HTMLCanvasElement };
+  type Sheet = { page: pdfjs.PDFPageProxy; el: HTMLElement };
 
   const host = document.querySelector<HTMLElement>('[data-cv-pages]');
 
-  // In dark mode the page is drawn in the site's own ink and surface colors
-  // rather than as a white sheet; light mode keeps the PDF's black on white.
-  function pageColors() {
-    if (currentTheme() === 'light') return undefined;
-    const css = getComputedStyle(document.documentElement);
-    return { foreground: css.getPropertyValue('--ink').trim(), background: css.getPropertyValue('--surface').trim() };
+  // A CSS color as red, green and blue from 0 to 1, read back through a canvas.
+  function channels(color: string) {
+    const ctx = document.createElement('canvas').getContext('2d')!;
+    ctx.fillStyle = color.trim();
+    const hex = String(ctx.fillStyle);
+    return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
   }
 
-  let drawing = 0;
+  // In dark mode CSS recolors the drawing through the #cv-night filter, black
+  // to the site's ink and white to its surface; this keeps the filter on the
+  // theme's current colors.
+  function tint() {
+    if (currentTheme() !== 'dark') return;
+    const css = getComputedStyle(document.documentElement);
+    const ink = channels(css.getPropertyValue('--ink'));
+    const surface = channels(css.getPropertyValue('--surface'));
+    document.querySelectorAll('#cv-night feComponentTransfer > *').forEach((fn, i) => {
+      fn.setAttribute('tableValues', `${ink[i]} ${surface[i]}`);
+    });
+  }
+
   // Some phones leave a canvas blank past about 16.7 million pixels.
   const MAX_PIXELS = 16_000_000;
 
   async function draw(sheets: Sheet[]) {
-    const run = ++drawing;
-    const colors = pageColors();
     // Phones get twice the pixels so a pinch-zoom stays sharp.
     const phone = window.matchMedia('(max-width: 720px)').matches;
     const ratio = Math.min(window.devicePixelRatio || 1, 3) * (phone ? 2 : 1);
@@ -84,12 +111,8 @@ const hasPdf = existsSync(resolve('public', `.${CV.pdf}`));
       canvas.width = Math.floor(viewport.width);
       canvas.height = Math.floor(viewport.height);
       canvas.setAttribute('aria-hidden', 'true');
-      await sheet.page.render({ canvas, viewport, pageColors: colors }).promise;
-      // The theme changed meanwhile: a newer draw owns the sheets now.
-      if (run !== drawing) return;
-      if (sheet.canvas) sheet.canvas.replaceWith(canvas);
-      else sheet.el.prepend(canvas);
-      sheet.canvas = canvas;
+      await sheet.page.render({ canvas, viewport }).promise;
+      sheet.el.prepend(canvas);
     }
   }
 
@@ -151,11 +174,12 @@ const hasPdf = existsSync(resolve('public', `.${CV.pdf}`));
     new ResizeObserver(fit).observe(host);
     await draw(sheets);
     requestAnimationFrame(() => (host.dataset.state = 'ready'));
-    document.addEventListener('themechange', () => draw(sheets));
     await Promise.all(sheets.map((sheet) => Promise.all([addText(sheet), addLinks(sheet)])));
   }
 
   if (host) {
+    tint();
+    document.addEventListener('themechange', tint);
     renderCv(host).catch(() => {
       const note = document.createElement('p');
       note.className = 'note';
@@ -187,8 +211,9 @@ const hasPdf = existsSync(resolve('public', `.${CV.pdf}`));
   }
   .actions {
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
-    gap: 20px;
+    gap: 8px 20px;
     font-family: var(--font-label);
     font-size: 13px;
     color: var(--muted);
@@ -211,11 +236,18 @@ const hasPdf = existsSync(resolve('public', `.${CV.pdf}`));
     flex-direction: column;
     gap: 24px;
   }
+  /* Holds the dark-mode filter; display: none would switch the filter off too. */
+  .filters {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
 
-  /* A sheet of paper on the desk; at night, the page drawn in the site's own colors. */
+  /* A sheet of paper on the desk; at night, the page recolored to the site's own colors. */
   .sheet {
     --paper: #ffffff;
     --blend: multiply;
+    --recolor: none;
     --scale-round-x: 1px;
     --scale-round-y: 1px;
     position: relative;
@@ -231,12 +263,14 @@ const hasPdf = existsSync(resolve('public', `.${CV.pdf}`));
   :global(:root[data-theme='dark']) .sheet {
     --paper: var(--surface);
     --blend: screen;
+    --recolor: url(#cv-night);
     box-shadow: none;
   }
   @media (prefers-color-scheme: dark) {
     :global(:root:not([data-theme])) .sheet {
       --paper: var(--surface);
       --blend: screen;
+      --recolor: url(#cv-night);
       box-shadow: none;
     }
   }
@@ -250,6 +284,7 @@ const hasPdf = existsSync(resolve('public', `.${CV.pdf}`));
     display: block;
     width: 100%;
     height: 100%;
+    filter: var(--recolor);
     transition: opacity 0.4s ease;
   }
   .pages:not([data-state='ready']) :global(canvas) {
@@ -346,6 +381,9 @@ const hasPdf = existsSync(resolve('public', `.${CV.pdf}`));
     }
     .open {
       display: flex;
+    }
+    .updated {
+      flex-basis: 100%;
     }
   }
 </style>

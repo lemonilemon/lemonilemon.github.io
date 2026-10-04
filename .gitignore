@@ -4,3 +4,6 @@
 !.envrc
 node_modules/
 dist/
+# The deploy workflow fetches the CV from the private resume repo; keep every
+# version of it out of this public repo's history.
+public/cv.pdf

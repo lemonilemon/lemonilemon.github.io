@@ -14,7 +14,8 @@ export const LINKS = {
   email: 'mailto:imlemonilemon@gmail.com',
 };
 
-// The CV page renders this file with PDF.js. Put the PDF at public/cv.pdf.
+// The CV page renders this file with PDF.js. The deploy workflow copies it from
+// the private resume repo; for a local preview, copy CV/public.pdf there.
 // `updated` is shown next to the download link, e.g. 'September 2026'.
 export const CV = {
   pdf: '/cv.pdf',

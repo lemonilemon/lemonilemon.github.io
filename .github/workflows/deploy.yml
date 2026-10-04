@@ -13,7 +13,44 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
 jobs:
+  # The CV is the only file taken from the private resume repo. Its read-only
+  # deploy key can still read that whole repo, so the key stays in this job,
+  # which runs only GitHub's own actions and Ubuntu's pdfinfo; the npm
+  # packages in the build job never see it. The key is a secret of the cv
+  # environment, which only main may use, so workflows on other branches
+  # cannot read it either.
+  cv:
+    runs-on: ubuntu-latest
+    environment:
+      name: cv
+      deployment: false
+    permissions: {}
+    steps:
+      - name: Fetch the public CV
+        uses: actions/checkout@v7
+        with:
+          repository: lemonilemon/resume
+          ssh-key: ${{ secrets.RESUME_DEPLOY_KEY }}
+          path: .resume
+          sparse-checkout: CV/public.pdf
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      # Anyone can download a public repo's artifacts, so the stamp is checked
+      # before the upload; the build checks it again (scripts/check-cv.ts).
+      - name: Refuse anything but the public build
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
+          pdfinfo .resume/CV/public.pdf | grep -Eq '^Subject: +Public version$' \
+            || { echo '::error::CV/public.pdf lacks the "Public version" stamp'; exit 1; }
+          mv .resume/CV/public.pdf cv.pdf
+      - name: Hand the CV to the build
+        uses: actions/upload-artifact@v7
+        with:
+          name: cv
+          path: cv.pdf
+          retention-days: 1
   build:
+    needs: cv
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,6 +60,11 @@ jobs:
       - name: Read the Pages address
         id: pages
         uses: actions/configure-pages@v6
+      - name: Put the CV in place
+        uses: actions/download-artifact@v8
+        with:
+          name: cv
+          path: public
       - name: Build with Astro
         uses: withastro/action@v6
         env:

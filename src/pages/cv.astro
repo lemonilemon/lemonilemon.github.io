@@ -16,6 +16,10 @@ const hasPdf = existsSync(resolve('public', `.${CV.pdf}`));
         hasPdf && (
           <div class="actions">
             {CV.updated && <span>Updated {CV.updated}</span>}
+            <a class="u open" href={CV.pdf}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 2.5H2.5v7h7v-2M6.5 2h3.5v3.5M10 2 5.5 6.5" /></svg>
+              Open PDF
+            </a>
             <a class="u download" href={CV.pdf} download>
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 1.5v6.5M3.2 5.4 6 8.2l2.8-2.8M2 10.5h8" /></svg>
               Download PDF
@@ -27,11 +31,14 @@ const hasPdf = existsSync(resolve('public', `.${CV.pdf}`));
     {
       hasPdf ? (
         <div class="pages" data-cv-pages data-src={CV.pdf} aria-label="CV, rendered from the PDF">
-          <noscript>
-            <p class="note">
-              The CV is a PDF: <a class="u" href={CV.pdf}>open it</a>.
-            </p>
-          </noscript>
+          {/* The first sheet holds the page's place while the PDF loads. */}
+          <div class="sheet" data-sheet>
+            <noscript>
+              <p class="note">
+                The CV is a PDF: <a class="u" href={CV.pdf}>open it</a>.
+              </p>
+            </noscript>
+          </div>
         </div>
       ) : (
         <p class="note">The CV is not up yet.</p>
@@ -43,48 +50,121 @@ const hasPdf = existsSync(resolve('public', `.${CV.pdf}`));
 <script>
   import * as pdfjs from 'pdfjs-dist';
   import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+  import { currentTheme } from '../scripts/theme';
 
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
+  type Sheet = { page: pdfjs.PDFPageProxy; el: HTMLElement; canvas?: HTMLCanvasElement };
+
   const host = document.querySelector<HTMLElement>('[data-cv-pages]');
 
-  async function renderCv(host: HTMLElement) {
-    const pdf = await pdfjs.getDocument({ url: host.dataset.src! }).promise;
-    const ratio = Math.min(window.devicePixelRatio || 1, 3);
-    for (let n = 1; n <= pdf.numPages; n++) {
-      const page = await pdf.getPage(n);
-      const base = page.getViewport({ scale: 1 });
-      const width = host.clientWidth;
-      const viewport = page.getViewport({ scale: (width / base.width) * ratio });
-      const sheet = document.createElement('div');
-      sheet.className = 'sheet';
-      sheet.style.aspectRatio = `${base.width} / ${base.height}`;
+  // In dark mode the page is drawn in the site's own ink and surface colors
+  // rather than as a white sheet; light mode keeps the PDF's black on white.
+  function pageColors() {
+    if (currentTheme() === 'light') return undefined;
+    const css = getComputedStyle(document.documentElement);
+    return { foreground: css.getPropertyValue('--ink').trim(), background: css.getPropertyValue('--surface').trim() };
+  }
+
+  let drawing = 0;
+  // Some phones leave a canvas blank past about 16.7 million pixels.
+  const MAX_PIXELS = 16_000_000;
+
+  async function draw(sheets: Sheet[]) {
+    const run = ++drawing;
+    const colors = pageColors();
+    // Phones get twice the pixels so a pinch-zoom stays sharp.
+    const phone = window.matchMedia('(max-width: 720px)').matches;
+    const ratio = Math.min(window.devicePixelRatio || 1, 3) * (phone ? 2 : 1);
+    for (const sheet of sheets) {
+      const base = sheet.page.getViewport({ scale: 1 });
+      const fit = Math.sqrt(MAX_PIXELS / (base.width * base.height));
+      const viewport = sheet.page.getViewport({ scale: Math.min((sheet.el.clientWidth / base.width) * ratio, fit) });
       const canvas = document.createElement('canvas');
       canvas.width = Math.floor(viewport.width);
       canvas.height = Math.floor(viewport.height);
-      canvas.setAttribute('role', 'img');
-      canvas.setAttribute('aria-label', `CV page ${n} of ${pdf.numPages}`);
-      sheet.append(canvas);
-      host.append(sheet);
-      await page.render({ canvas, viewport }).promise;
+      canvas.setAttribute('aria-hidden', 'true');
+      await sheet.page.render({ canvas, viewport, pageColors: colors }).promise;
+      // The theme changed meanwhile: a newer draw owns the sheets now.
+      if (run !== drawing) return;
+      if (sheet.canvas) sheet.canvas.replaceWith(canvas);
+      else sheet.el.prepend(canvas);
+      sheet.canvas = canvas;
     }
-    const text = await Promise.all(
-      Array.from({ length: pdf.numPages }, (_, i) => pdf.getPage(i + 1).then((p) => p.getTextContent())),
-    );
-    // Keep the text available to screen readers and find-in-page.
-    const plain = document.createElement('div');
-    plain.className = 'visually-hidden';
-    plain.textContent = text.map((t) => t.items.map((item) => ('str' in item ? item.str : '')).join(' ')).join('\n');
-    host.append(plain);
+  }
+
+  // Transparent text over the drawing, for selecting, copying, find-in-page
+  // and screen readers.
+  async function addText(sheet: Sheet) {
+    const layer = document.createElement('div');
+    layer.className = 'textLayer';
+    sheet.el.append(layer);
+    await new pdfjs.TextLayer({
+      textContentSource: sheet.page.streamTextContent(),
+      container: layer,
+      viewport: sheet.page.getViewport({ scale: 1 }),
+    }).render();
+  }
+
+  // The PDF's links, as real links laid over the drawing.
+  async function addLinks(sheet: Sheet) {
+    const base = sheet.page.getViewport({ scale: 1 });
+    const layer = document.createElement('div');
+    layer.className = 'linkLayer';
+    for (const annotation of await sheet.page.getAnnotations()) {
+      if (annotation.subtype !== 'Link' || !annotation.url) continue;
+      const [x1, y1] = base.convertToViewportPoint(annotation.rect[0], annotation.rect[1]);
+      const [x2, y2] = base.convertToViewportPoint(annotation.rect[2], annotation.rect[3]);
+      const link = document.createElement('a');
+      link.href = annotation.url;
+      link.setAttribute('aria-label', annotation.url.replace(/^https?:\/\//, '').replace(/\/$/, ''));
+      Object.assign(link.style, {
+        left: `${(Math.min(x1, x2) / base.width) * 100}%`,
+        top: `${(Math.min(y1, y2) / base.height) * 100}%`,
+        width: `${(Math.abs(x2 - x1) / base.width) * 100}%`,
+        height: `${(Math.abs(y2 - y1) / base.height) * 100}%`,
+      });
+      layer.append(link);
+    }
+    sheet.el.append(layer);
+  }
+
+  async function renderCv(host: HTMLElement) {
+    const pdf = await pdfjs.getDocument({ url: host.dataset.src! }).promise;
+    const first = host.querySelector<HTMLElement>('[data-sheet]')!;
+    const sheets: Sheet[] = [];
+    for (let n = 1; n <= pdf.numPages; n++) {
+      const page = await pdf.getPage(n);
+      const el = n === 1 ? first : host.appendChild(first.cloneNode(false) as HTMLElement);
+      const base = page.getViewport({ scale: 1 });
+      el.replaceChildren();
+      el.style.aspectRatio = `${base.width} / ${base.height}`;
+      sheets.push({ page, el });
+    }
+    // The text layer sizes itself from this, so it follows the sheet's width without redrawing.
+    const fit = () => {
+      for (const { page, el } of sheets) {
+        el.style.setProperty('--total-scale-factor', String(el.clientWidth / page.getViewport({ scale: 1 }).width));
+      }
+    };
+    fit();
+    new ResizeObserver(fit).observe(host);
+    await draw(sheets);
+    requestAnimationFrame(() => (host.dataset.state = 'ready'));
+    document.addEventListener('themechange', () => draw(sheets));
+    await Promise.all(sheets.map((sheet) => Promise.all([addText(sheet), addLinks(sheet)])));
   }
 
   if (host) {
     renderCv(host).catch(() => {
-      host.innerHTML = '';
       const note = document.createElement('p');
       note.className = 'note';
-      note.innerHTML = `The preview could not load. <a class="u" href="${host.dataset.src}">Open the PDF</a>.`;
-      host.append(note);
+      const link = document.createElement('a');
+      link.className = 'u';
+      link.href = host.dataset.src!;
+      link.textContent = 'Open the PDF';
+      note.append('The preview could not load. ', link, '.');
+      host.replaceChildren(note);
     });
   }
 </script>
@@ -113,31 +193,147 @@ const hasPdf = existsSync(resolve('public', `.${CV.pdf}`));
     font-size: 13px;
     color: var(--muted);
   }
-  .download {
+  .download,
+  .open {
     display: flex;
     align-items: center;
     gap: 6px;
     padding: 12px 0;
     margin: -12px 0;
   }
+  /* On phones the preview is too small to read without zooming, so the
+     phone's own PDF viewer is one tap away. */
+  .open {
+    display: none;
+  }
   .pages {
     display: flex;
     flex-direction: column;
     gap: 24px;
   }
-  .pages :global(.sheet) {
-    width: 100%;
-    background: #ffffff;
+
+  /* A sheet of paper on the desk; at night, the page drawn in the site's own colors. */
+  .sheet {
+    --paper: #ffffff;
+    --blend: multiply;
+    --scale-round-x: 1px;
+    --scale-round-y: 1px;
+    position: relative;
+    aspect-ratio: 595.276 / 841.89;
+    background: var(--paper);
     border: 1px solid var(--rule);
     border-radius: 2px;
-    box-shadow: 0 1px 3px rgba(23, 24, 26, 0.06);
+    box-shadow:
+      0 1px 2px rgba(23, 24, 26, 0.05),
+      0 24px 48px -28px rgba(23, 24, 26, 0.22);
     overflow: hidden;
   }
-  .pages :global(canvas) {
+  :global(:root[data-theme='dark']) .sheet {
+    --paper: var(--surface);
+    --blend: screen;
+    box-shadow: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme])) .sheet {
+      --paper: var(--surface);
+      --blend: screen;
+      box-shadow: none;
+    }
+  }
+  @media (scripting: none) {
+    .sheet {
+      aspect-ratio: auto;
+      padding: 28px 32px;
+    }
+  }
+  .sheet :global(canvas) {
     display: block;
     width: 100%;
     height: 100%;
+    transition: opacity 0.4s ease;
   }
+  .pages:not([data-state='ready']) :global(canvas) {
+    opacity: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sheet :global(canvas) {
+      transition: none;
+    }
+  }
+
+  /* PDF.js's text layer, trimmed to what one page needs. Blending lets the
+     site's selection color sit under the drawn glyphs instead of over them. */
+  .sheet :global(.textLayer) {
+    --min-font-size: 1;
+    --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+    --min-font-size-inv: calc(1 / var(--min-font-size));
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    overflow: clip;
+    line-height: 1;
+    text-align: initial;
+    text-size-adjust: none;
+    -webkit-text-size-adjust: none;
+    forced-color-adjust: none;
+    transform-origin: 0 0;
+    mix-blend-mode: var(--blend);
+  }
+  .sheet :global(.textLayer :is(span, br)) {
+    color: transparent;
+    position: absolute;
+    white-space: pre;
+    cursor: text;
+    transform-origin: 0% 0%;
+  }
+  .sheet :global(.textLayer > :not(.markedContent)),
+  .sheet :global(.textLayer .markedContent span:not(.markedContent)) {
+    --font-height: 0;
+    --scale-x: 1;
+    --rotate: 0deg;
+    z-index: 1;
+    font-size: calc(var(--text-scale-factor) * var(--font-height));
+    transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+  }
+  .sheet :global(.textLayer .markedContent) {
+    display: contents;
+  }
+  .sheet :global(.textLayer ::selection) {
+    background: var(--selection);
+    color: transparent;
+  }
+  .sheet :global(.textLayer br::selection) {
+    background: transparent;
+  }
+  .sheet :global(.textLayer .endOfContent) {
+    display: block;
+    position: absolute;
+    inset: 100% 0 0;
+    z-index: 0;
+    cursor: default;
+    user-select: none;
+  }
+
+  .sheet :global(.linkLayer) {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    mix-blend-mode: var(--blend);
+  }
+  .sheet :global(.linkLayer a) {
+    position: absolute;
+    pointer-events: auto;
+    border-radius: 2px;
+  }
+  .sheet :global(.linkLayer a:hover) {
+    background: var(--selection);
+  }
+  .sheet :global(.linkLayer a:focus-visible) {
+    outline: 1.5px solid var(--ink);
+    outline-offset: 2px;
+  }
+
   .cv :global(.note) {
     margin: 0;
     font-size: 19px;
@@ -147,6 +343,9 @@ const hasPdf = existsSync(resolve('public', `.${CV.pdf}`));
   @media (max-width: 720px) {
     .cv {
       padding-top: 40px;
+    }
+    .open {
+      display: flex;
     }
   }
 </style>

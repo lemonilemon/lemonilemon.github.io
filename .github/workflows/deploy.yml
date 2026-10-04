@@ -13,6 +13,8 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
 jobs:
+  # Every job runs on Ubuntu 24.04, not ubuntu-latest, which moves to Ubuntu 26
+  # from 19 October 2026; move them together once a build has passed there.
   # The CV is the only file taken from the private resume repo. Its read-only
   # deploy key can still read that whole repo, so the key stays in this job,
   # which runs only GitHub's own actions and Ubuntu's pdfinfo; the npm
@@ -20,7 +22,7 @@ jobs:
   # environment, which only main may use, so workflows on other branches
   # cannot read it either.
   cv:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment:
       name: cv
       deployment: false
@@ -62,7 +64,7 @@ jobs:
   build:
     needs: cv
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -88,7 +90,7 @@ jobs:
   deploy:
     needs: build
     if: ${{ !cancelled() && needs.build.result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

@@ -49,8 +49,11 @@ jobs:
           name: cv
           path: cv.pdf
           retention-days: 1
+  # The site goes out even when the cv job fails: the CV page then says the
+  # CV is not up yet, and the failed cv job still marks the run as failed.
   build:
     needs: cv
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -61,16 +64,21 @@ jobs:
         id: pages
         uses: actions/configure-pages@v6
       - name: Put the CV in place
+        if: ${{ needs.cv.result == 'success' }}
         uses: actions/download-artifact@v8
         with:
           name: cv
           path: public
+      - name: Note the missing CV
+        if: ${{ needs.cv.result != 'success' }}
+        run: echo "::warning::The CV could not be fetched or checked, so this deploy shows 'The CV is not up yet.'"
       - name: Build with Astro
         uses: withastro/action@v6
         env:
           SITE_URL: ${{ steps.pages.outputs.origin }}
   deploy:
     needs: build
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages

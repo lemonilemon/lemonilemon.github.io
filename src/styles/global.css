@@ -120,6 +120,14 @@ a { color: var(--ink); text-decoration: none; }
   white-space: nowrap;
 }
 
+/* Switching themes animates its own reveal (scripts/theme.ts), so the page's
+   before and after snapshots neither cross-fade nor blend. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
 /* Star twinkle, shared by the night sky layers. */
 @keyframes twinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
 .t0 { animation: twinkle 4.2s ease-in-out infinite; }

@@ -33,7 +33,9 @@ const nav = [
   };
   label();
   button.addEventListener('click', () => {
-    setTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+    // The new theme grows from the switch itself, however it was pressed.
+    const box = button.getBoundingClientRect();
+    setTheme(currentTheme() === 'dark' ? 'light' : 'dark', { x: box.left + box.width / 2, y: box.top + box.height / 2 });
   });
   document.addEventListener('themechange', label);
 </script>
